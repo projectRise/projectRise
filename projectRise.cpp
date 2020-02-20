@@ -18,6 +18,12 @@
 #include <Wire.h> //I2C needed for sensors
 #include "SparkFunMPL3115A2.h" //Pressure sensor - Search "SparkFun MPL3115" and install from Library Manager
 #include "SparkFun_Si7021_Breakout_Library.h" //Humidity sensor - Search "SparkFun Si7021" and install from Library Manager
+#include <SPI.h>
+#include "SdFat.h"
+
+SdFat SD;
+#define SD_CS_PIN SS
+File myFile;
 
 MPL3115A2 myPressure; //Create an instance of the pressure sensor
 Weather myHumidity;//Create an instance of the humidity sensor
@@ -35,12 +41,27 @@ const byte BATT = A2;
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 long lastSecond; //The millis counter to see when a second rolls by
 
-float get_light_level();
 float get_battery_level();
+float get_light_level();
 
 void setup()
 {
     Serial.begin(9600);
+    //Leds that show status on board
+    pinMode(24, OUTPUT);
+    pinMode(25, OUTPUT);
+    while (!Serial) {
+        ; // wait for serial port to connect. Needed for native USB port only
+    }
+
+    Serial.print("Initializing SD card...");
+
+    if (!SD.begin(SD_CS_PIN)) {
+        Serial.println("initialization failed!");
+        return;
+    }
+    Serial.println("initialization done.");
+
     Serial.println("Weather Shield Example");
 
     pinMode(STAT_BLUE, OUTPUT); //Status LED Blue
@@ -57,7 +78,6 @@ void setup()
 
     //Configure the humidity sensor
     myHumidity.begin();
-    myPressure.setModeActive();
 
     lastSecond = millis();
 
@@ -67,16 +87,18 @@ void setup()
 void loop()
 {
     //Print readings every second
-    if(millis() - lastSecond >= 1000)
+    if (millis() - lastSecond >= 1000)
     {
-        digitalWrite(STAT_BLUE, HIGH); //Blink stat LED
+        digitalWrite(25, LOW);
+        digitalWrite(24, HIGH);
+        //digitalWrite(STAT_BLUE, HIGH); //Blink stat LED
 
         lastSecond += 1000;
 
         //Check Humidity Sensor
         float humidity = myHumidity.getRH();
 
-        if(humidity == 998) //Humidty sensor failed to respond
+        if (humidity == 998) //Humidty sensor failed to respond
         {
             Serial.println("I2C communication to sensors is not working. Check solder connections.");
 
@@ -100,15 +122,16 @@ void loop()
             //Check Pressure Sensor
             float pressure = myPressure.readPressure();
             Serial.print(" Pressure = ");
-            Serial.print(pressure / 1000.0f);
-            Serial.print("kPa,");
+            Serial.print(pressure);
+            Serial.print("Pa,");
 
-            //Check tempf from pressure sensor
-            float tempf = myPressure.readTemp();
-            Serial.print(" temp_p = ");
-            Serial.print(tempf, 2);
-            Serial.print("C,");
-
+            /*
+                  //Check tempf from pressure sensor
+                  float tempf = myPressure.readTempF();
+                  Serial.print(" temp_p = ");
+                  Serial.print(tempf, 2);
+                  Serial.print("F,");
+            */
             //Check light sensor
             float light_lvl = get_light_level();
             Serial.print(" light_lvl = ");
@@ -122,12 +145,50 @@ void loop()
             Serial.print("V");
 
             Serial.println();
-        }
 
-        digitalWrite(STAT_BLUE, LOW); //Turn off stat LED
+            // open the file. note that only one file can be open at a time,
+            // so you have to close this one before opening another.
+            myFile = SD.open("weather.txt", FILE_WRITE);
+
+            // if the file opened okay, write to it:
+            if (myFile) {
+                Serial.print("Writing to test.txt...");
+                myFile.print("Humidity = ");
+                myFile.print(humidity);
+                myFile.print("%,");
+                myFile.print(" temp_h = ");
+                myFile.print(temp_h, 2);
+                myFile.print("C,");
+
+                myFile.print(" Pressure = ");
+                myFile.print(pressure);
+                myFile.print("Pa,");
+
+                myFile.print(" light_lvl = ");
+                myFile.print(light_lvl);
+                myFile.print("V,");
+
+                myFile.print(" VinPin = ");
+                myFile.print(batt_lvl);
+                myFile.print("V");
+
+                myFile.println();
+
+                // close the file:
+                myFile.close();
+                Serial.println("done.");
+            }
+            else {
+                // if the file didn't open, print an error:
+                Serial.println("error opening test.txt");
+            }
+        }
+        digitalWrite(24, LOW);
+        digitalWrite(25, HIGH);
+        // digitalWrite(STAT_BLUE, LOW); //Turn off stat LED
     }
 
-    delay(100);
+    delay(10000);
 }
 
 //Returns the voltage of the light sensor based on the 3.3V rail
