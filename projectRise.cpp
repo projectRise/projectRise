@@ -20,6 +20,7 @@
 #include "SparkFun_Si7021_Breakout_Library.h" //Humidity sensor - Search "SparkFun Si7021" and install from Library Manager
 #include <SPI.h>
 #include "SdFat.h"
+#include "LowPower.h"
 
 SdFat SD;
 #define SD_CS_PIN SS
@@ -46,10 +47,11 @@ float get_light_level();
 
 void setup()
 {
-    Serial.begin(9600);
+    Serial.begin(115200);
     //Leds that show status on board
     pinMode(24, OUTPUT);
     pinMode(25, OUTPUT);
+    pinMode(27, OUTPUT);
     while (!Serial) {
         ; // wait for serial port to connect. Needed for native USB port only
     }
@@ -83,12 +85,40 @@ void setup()
 
     Serial.println("Weather Shield online!");
 }
+    // Enter idle state for 8 s with the rest of peripherals turned off
+    // Each microcontroller comes with different number of peripherals
+    // Comment off line of code where necessary
+
+    // ATmega328P, ATmega168
+    //LowPower.idle(SLEEP_8S, ADC_OFF, TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, 
+    //              SPI_OFF, USART0_OFF, TWI_OFF);
+
+    // ATmega32U4
+    //LowPower.idle(SLEEP_8S, ADC_OFF, TIMER4_OFF, TIMER3_OFF, TIMER1_OFF, 
+    //		  TIMER0_OFF, SPI_OFF, USART1_OFF, TWI_OFF, USB_OFF);
+
+    // ATmega2560
+    //LowPower.idle(SLEEP_2S, ADC_OFF, TIMER5_OFF, TIMER4_OFF, TIMER3_OFF, 
+    //        TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, SPI_OFF, USART3_OFF, 
+    //        USART2_OFF, USART1_OFF, USART0_OFF, TWI_OFF);
+
+    // ATmega256RFR2
+    //LowPower.idle(SLEEP_8S, ADC_OFF, TIMER5_OFF, TIMER4_OFF, TIMER3_OFF, 
+    //      TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, SPI_OFF,
+    //      USART1_OFF, USART0_OFF, TWI_OFF);
+        //Print readings every second
 
 void loop()
 {
-    //Print readings every second
     if (millis() - lastSecond >= 1000)
     {
+        //Prints before the LowPower.powerSave() funtion wont run.
+        // ATmega2560
+        digitalWrite(25, LOW);
+        digitalWrite(27, HIGH);
+        LowPower.powerSave(SLEEP_8S, ADC_OFF, BOD_OFF, TIMER2_OFF);
+        Serial.println("Wake up");
+        digitalWrite(27, LOW);
         digitalWrite(25, LOW);
         digitalWrite(24, HIGH);
         //digitalWrite(STAT_BLUE, HIGH); //Blink stat LED
@@ -187,8 +217,8 @@ void loop()
         digitalWrite(25, HIGH);
         // digitalWrite(STAT_BLUE, LOW); //Turn off stat LED
     }
-
-    delay(10000);
+    //delay(2000);
+    //Serial.println("Sleep");
 }
 
 //Returns the voltage of the light sensor based on the 3.3V rail
