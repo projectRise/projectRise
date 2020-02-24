@@ -236,8 +236,7 @@ void saveToFile()
     counter++;
 }
 
-#define VOLT    3.3
-//#define VOLT    5.0
+#define WS_VOLTAGE    3.3
 //Returns the voltage of the light sensor based on the 3.3V rail
 //This allows us to ignore what VCC might be (an Arduino plugged into USB has VCC of 4.5 to 5.2V)
 float getLightLevel()
@@ -246,11 +245,11 @@ float getLightLevel()
 
     float lightSensor = analogRead(PIN_LIGHTSENSOR);
 
-    operatingVoltage = VOLT / operatingVoltage; //The reference voltage is 3.3V
+    operatingVoltage = WS_VOLTAGE / operatingVoltage; //The reference voltage is 3.3V
 
     lightSensor = operatingVoltage * lightSensor;
 
-    return lightSensor / VOLT;
+    return lightSensor / WS_VOLTAGE;
 }
 
 //Returns the voltage of the raw pin based on the 3.3V rail
@@ -263,7 +262,7 @@ float getBatteryLevel()
 
     float rawVoltage = analogRead(PIN_BATTERYSENSOR);
 
-    operatingVoltage = VOLT / operatingVoltage; //The reference voltage is 3.3V
+    operatingVoltage = WS_VOLTAGE / operatingVoltage; //The reference voltage is 3.3V
 
     rawVoltage = operatingVoltage * rawVoltage; //Convert the 0 to 1023 int to actual voltage on PIN_BATTERYSENSOR pin
 
