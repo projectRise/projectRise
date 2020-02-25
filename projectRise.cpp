@@ -25,6 +25,8 @@
 #include "types.h"
 #include "debug.hpp"
 
+#define ARRCNT(x)   (sizeof((x)) / sizeof(*(x)))
+
 const uint8_t PIN_SD_CS             = SS;
 SdFat SD;
 
@@ -54,6 +56,15 @@ bool getSensorValues(collection_t& result);
 void saveToFile();
 float getBatteryLevel();
 float getLightLevel();
+
+bool writeTextFile(const char* const filepath, const collection_t & content);
+bool writeBinaryFile(const char* const filepath, const collection_t& content);
+bool readBinaryFile(const char* const filepath, collection_t* const result, const size_t count, const uint32_t index = 0U);
+void printSensorValues(const collection_t& content);
+
+void testReadFromFile();
+
+#define TEST_INPUT
 
 void setup()
 {
@@ -91,7 +102,7 @@ void setup()
 
     //Configure the humidity sensor
     humiditySensor.begin();
-    if(humiditySensor.getRH() == 998) //Humidty sensor failed to respond
+    if(humiditySensor.getRH() == 998.0f || pressureSensor.readPressure() < 0.0f) //Humidty sensor failed to respond
     {
         DebugPrintLine("Failed");
         while(true);
@@ -100,6 +111,35 @@ void setup()
     DebugPrintLine("Done");
     DebugPrintLine();
     DebugFlush();
+
+    #ifdef TEST_INPUT
+    testReadFromFile();
+    while(true);
+    #endif
+}
+
+#define TEST_READOFFSET     0U                                          // Position in the file to start reading (should be even divisible by size of 'collection_t').
+#define TEST_ELEMENTCOUNT   2U                                          // How many 'collection_t' to request per read (a.k.a. 'collection_t' count of the buffer).
+#define TEST_READCOUNT      5U                                          // Total number of read operations.
+#define TEST_TOTALCOUNT     ((TEST_ELEMENTCOUNT) * (TEST_READCOUNT))    // The total number of 'collection_t' values to read.
+void testReadFromFile()
+{
+    collection_t vals[TEST_ELEMENTCOUNT];
+    const size_t max = TEST_READOFFSET + TEST_TOTALCOUNT;
+    for(size_t i = TEST_READOFFSET; i < max; i += TEST_ELEMENTCOUNT)
+    {
+        if(!readBinaryFile(LOGFILE_BINARY, vals, TEST_ELEMENTCOUNT, i))
+        {
+            DebugPrintLine("Error: Could not read from file \'" LOGFILE_BINARY "\'");
+            break;
+        }
+
+        for(size_t j = 0U; j < TEST_ELEMENTCOUNT; j++)
+        {
+            DebugPrint("VALUE["); DebugPrint(i + j); DebugPrintLine("]: ");
+            printSensorValues(vals[j]);
+        }
+    }
 }
 
 void loop()
@@ -174,6 +214,88 @@ bool getSensorValues(collection_t& result)
     return true;
 }
 
+bool writeTextFile(const char* const filepath, const collection_t& content)
+{
+    File file = SD.open(filepath, FILE_WRITE);
+    if(!file)
+    {
+        return false;
+    }
+
+    file.print("timestamp=");    file.print(content.header.timestamp);    file.print(", ");
+    file.print("count=");        file.print(content.header.count);        file.print(", ");
+    file.print("temperature=");  file.print(content.data[0].value, 2);    file.print(", ");
+    file.print("humidity=");     file.print(content.data[1].value, 2);    file.print(", ");
+    file.print("pressure=");     file.print(content.data[2].value, 2);    file.print(", ");
+    file.print("light=");        file.print(content.data[3].value, 2);    file.print(", ");
+    file.print("battery=");      file.print(content.data[4].value, 2);
+    file.println();
+    file.flush();
+
+    file.close();
+    return true;
+}
+
+bool writeBinaryFile(const char* const filepath, const collection_t& content)
+{
+    File file = SD.open(filepath, FILE_WRITE);
+    if(!file)
+    {
+        return false;
+    }
+
+    file.write(&content, sizeof(content));
+    file.flush();
+    file.close();
+    return true;
+}
+
+bool readBinaryFile(const char* const filepath, collection_t* const result, const size_t count, const uint32_t index)
+{
+    if(count < 1U)
+    {
+        return false;
+    }
+
+    File file = SD.open(filepath, FILE_READ);
+    if(!file)
+    {
+        return false;
+    }
+
+    size_t totalSize = sizeof(*result) * count;
+    if(index > 0U)
+    {
+        if(!file.seek(sizeof(*result) * index))
+        {
+            return false;
+        }
+    }
+
+    int avail = file.available();
+    if(avail <= 0 || (size_t)avail < totalSize)
+    {
+        return false;
+    }
+
+    file.read(result, totalSize);
+    file.close();
+    return true;
+}
+
+void printSensorValues(const collection_t& content)
+{
+    DebugPrint("timestamp=");   DebugPrint(content.header.timestamp);   DebugPrint(", ");
+    DebugPrint("count=");       DebugPrint(content.header.count);       DebugPrint(", ");
+    DebugPrint("temperature="); DebugPrint(content.data[0].value, 2);   DebugPrint(", ");
+    DebugPrint("humidity=");    DebugPrint(content.data[1].value, 2);   DebugPrint(", ");
+    DebugPrint("pressure=");    DebugPrint(content.data[2].value, 2);   DebugPrint(", ");
+    DebugPrint("light=");       DebugPrint(content.data[3].value, 2);   DebugPrint(", ");
+    DebugPrint("battery=");     DebugPrint(content.data[4].value, 2);
+    DebugPrintLine();
+    DebugFlush();
+}
+
 void saveToFile()
 {
     collection_t values;
@@ -186,52 +308,21 @@ void saveToFile()
     // open the file. note that only one file can be open at a time,
     // so you have to close this one before opening another.
     #ifdef OUTPUT_TEXT
-    File textLog = SD.open(LOGFILE_TEXT, FILE_WRITE);
-    if(textLog)
+    if(!writeTextFile(LOGFILE_TEXT, values))
     {
-        textLog.print("VALUE["); textLog.print(counter); textLog.println("]");
-        textLog.print("    timestamp=");   textLog.println(values.header.timestamp);
-        textLog.print("    count=");       textLog.println(values.header.count);
-        textLog.print("    temperature="); textLog.println(values.data[0].value, 2);
-        textLog.print("    humidity=");    textLog.println(values.data[1].value, 2);
-        textLog.print("    pressure=");    textLog.println(values.data[2].value, 2);
-        textLog.print("    light=");       textLog.println(values.data[3].value, 2);
-        textLog.print("    battery=");     textLog.println(values.data[4].value, 2);
-        textLog.println();
-        textLog.flush();
-
-        textLog.close();
-    }
-    else
-    {
-        DebugPrintLine("Error: Could not open \'" LOGFILE_TEXT "\'");
+        DebugPrintLine("Error: Could not open \'" LOGFILE_TEXT "\' for writing");
     }
     #endif
 
     #ifdef OUTPUT_BINARY
-    File binaryLog = SD.open(LOGFILE_BINARY, FILE_WRITE);
-    if(binaryLog)
+    if(!writeBinaryFile(LOGFILE_BINARY, values))
     {
-        binaryLog.write(&values, sizeof(values));
-        binaryLog.flush();
-        binaryLog.close();
-    }
-    else
-    {
-        DebugPrintLine("Error: Could not open \'" LOGFILE_BINARY "\'");
+        DebugPrintLine("Error: Could not open \'" LOGFILE_BINARY "\' for writing");
     }
     #endif
 
-    DebugPrint("VALUE["); DebugPrint(counter); DebugPrintLine("]");
-    DebugPrint("    timestamp=");     DebugPrintLine(values.header.timestamp);
-    DebugPrint("    count=");         DebugPrintLine(values.header.count);
-    DebugPrint("    temperature=");   DebugPrintLine(values.data[0].value, 2);
-    DebugPrint("    humidity=");      DebugPrintLine(values.data[1].value, 2);
-    DebugPrint("    pressure=");      DebugPrintLine(values.data[2].value, 2);
-    DebugPrint("    light=");         DebugPrintLine(values.data[3].value, 2);
-    DebugPrint("    battery=");       DebugPrintLine(values.data[4].value, 2);
-    DebugPrintLine();
-    DebugFlush();
+    DebugPrint("VALUE["); DebugPrint(counter); DebugPrintLine("]: ");
+    printSensorValues(values);
 
     counter++;
 }
