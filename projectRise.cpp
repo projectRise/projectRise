@@ -168,7 +168,7 @@ void setup(void)
     DebugPrintLine();
     DebugFlush();
 
-    while(true);
+    //while(true);
 
     //#define TEST_INPUT
     #ifdef TEST_INPUT
