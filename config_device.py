@@ -6,6 +6,7 @@ CMD_INIT    = '$$$'
 CMD_OK      = 'OK'
 CMD_FAIL    = 'FAIL'
 CMD_UNKNOWN = 'UNKNOWN'
+CMD_ABORT   = 'ABORT'
 CMD_DT      = 'DT'
 
 def receiveResponse(sp):
@@ -32,7 +33,7 @@ def sendCommand(sp, cmd, *args):
         if i < count - 1:
             res += b','
 
-    sp.write(res + b'\n')
+    sp.write(res + b'\r\n')
 
 def main():
     with serial.Serial(options.port, options.speed, timeout=options.timeout) as sp:

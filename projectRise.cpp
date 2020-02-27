@@ -66,7 +66,7 @@ float getLightLevel(void);
 
 bool writeTextFile(const char* const filepath, const collection_t & content);
 bool writeBinaryFile(const char* const filepath, const collection_t& content);
-bool readBinaryFile(const char* const filepath, collection_t* const result, size_t* const resultCount, const size_t count, const uint32_t index = 0U);
+bool readBinaryFile(const char* const filepath, collection_t* const result, size_t* const resultCount, const size_t count, const size_t index = 0U);
 void printSensorValues(const collection_t& content);
 
 void commandMode(void);
@@ -77,6 +77,7 @@ void testReadFromFile(void);
 #define CMD_OK      "OK"
 #define CMD_FAIL    "FAIL"
 #define CMD_UNKNOWN "UNKNOWN"
+#define CMD_ABORT   "ABORT"
 #define CMD_DT      "DT"
 
 void setup(void)
@@ -159,13 +160,15 @@ void setup(void)
     }
 
     DebugPrintLine("Waiting for setup command...");
+    Serial.setTimeout(2500UL);
     commandMode();
+    Serial.setTimeout(1000UL); // Restore default timeout
 
     DebugPrintLine("Done");
     DebugPrintLine();
     DebugFlush();
 
-    //while(true);
+    while(true);
 
     //#define TEST_INPUT
     #ifdef TEST_INPUT
@@ -228,10 +231,11 @@ void loop(void)
 void testReadFromFile(void)
 {
     collection_t vals[TEST_ELEMENTCOUNT];
+    size_t readCount = 0U;
     const size_t max = TEST_READOFFSET + TEST_TOTALCOUNT;
     for(size_t i = TEST_READOFFSET; i < max; i += TEST_ELEMENTCOUNT)
     {
-        if(!readBinaryFile(LOGFILE_BINARY, vals, TEST_ELEMENTCOUNT, i))
+        if(!readBinaryFile(LOGFILE_BINARY, vals, &readCount, TEST_ELEMENTCOUNT, i))
         {
             DebugPrintLine("Error: Could not read from file \'" LOGFILE_BINARY "\'");
             break;
@@ -247,58 +251,74 @@ void testReadFromFile(void)
 
 void commandMode(void)
 {
-    Serial.setTimeout(2500UL);
     Serial.println(CMD_INIT);
 
+    #define CMD_BUFSIZE 16
     char cmdBuffer[16 + 1];
-    size_t cmdLen = Serial.readBytesUntil('\n', cmdBuffer, sizeof(cmdBuffer) - 1);
-    cmdBuffer[cmdLen] = '\0';
-
-    if(strcmp(cmdBuffer, CMD_INIT) == 0)
+    size_t cmdLen = Serial.readBytesUntil('\n', cmdBuffer, sizeof(cmdBuffer));
+    if(cmdLen == 0U)
     {
-        Serial.println(CMD_OK);
-        Serial.flush();
-
-        Serial.setTimeout(ULONG_MAX);
-        bool active = true;
-        while(active)
-        {
-            do
-            {
-                cmdLen = Serial.readBytesUntil('\n', cmdBuffer, sizeof(cmdBuffer) - 1);
-                cmdBuffer[cmdLen] = '\0';
-
-                if(cmdLen == 0U || strcmp(cmdBuffer, CMD_INIT) == 0)
-                {
-                    active = false;
-                    Serial.println(CMD_OK);
-                }
-                else if(strncmp(cmdBuffer, CMD_DT, STRLEN(CMD_DT)) == 0)
-                {
-                    errno = 0;
-                    unsigned long tmp = strtoul(cmdBuffer + STRLEN(CMD_DT), nullptr, 10);
-                    if(tmp == 0UL || errno != 0)
-                    {
-                        Serial.print(CMD_FAIL);
-                        break;
-                    }
-
-                    DateTime tmpTime = DateTime(tmp);
-                    rtc.adjust(tmpTime);
-                    Serial.print(CMD_OK);
-                    Serial.println(tmpTime.unixtime());
-                }
-                else
-                {
-                    Serial.println(CMD_UNKNOWN);
-                }
-            } while(false); // Easier flow control
-
-            Serial.flush();
-        }
+        return;
+    }
+    else if(cmdBuffer[cmdLen - 1] != '\r')
+    {
+        Serial.println(CMD_ABORT);
+        return;
     }
 
-    Serial.setTimeout(1000UL);  // Restore default timeout
+    cmdBuffer[cmdLen - 1] = '\0';
+    if(strcmp(cmdBuffer, CMD_INIT) != 0)
+    {
+        Serial.print(CMD_FAIL);
+        return;
+    }
+
+    Serial.println(CMD_OK);
+    Serial.flush();
+
+    Serial.setTimeout(ULONG_MAX);
+    bool active = true;
+    while(active)
+    {
+        do
+        {
+            cmdLen = Serial.readBytesUntil('\n', cmdBuffer, sizeof(cmdBuffer));
+            if(cmdLen == 0U || cmdBuffer[cmdLen - 1] != '\r')
+            {
+                active = false;
+                Serial.println(CMD_ABORT);
+                break;
+            }
+
+            cmdBuffer[cmdLen - 1] = '\0';
+            if(strcmp(cmdBuffer, CMD_INIT) == 0)
+            {
+                active = false;
+                Serial.println(CMD_OK);
+            }
+            else if(strncmp(cmdBuffer, CMD_DT, STRLEN(CMD_DT)) == 0)
+            {
+                errno = 0;
+                unsigned long tmp = strtoul(cmdBuffer + STRLEN(CMD_DT), nullptr, 10);
+                if(tmp == 0UL || errno != 0)
+                {
+                    Serial.print(CMD_FAIL);
+                    break;
+                }
+
+                DateTime tmpTime = DateTime(tmp);
+                rtc.adjust(tmpTime);
+                Serial.print(CMD_OK);
+                Serial.println(tmpTime.unixtime());
+            }
+            else
+            {
+                Serial.println(CMD_UNKNOWN);
+            }
+        } while(false); // Easier flow control
+
+        Serial.flush();
+    }
 }
 
 bool getSensorValues(collection_t& result)
@@ -362,7 +382,7 @@ bool writeBinaryFile(const char* const filepath, const collection_t& content)
     return true;
 }
 
-bool readBinaryFile(const char* const filepath, collection_t* const result, size_t* const resultCount, const size_t count, const uint32_t index)
+bool readBinaryFile(const char* const filepath, collection_t* const result, size_t* const resultCount, const size_t count, const size_t index)
 {
     if(resultCount != nullptr)
     {
