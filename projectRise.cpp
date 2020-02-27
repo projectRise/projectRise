@@ -16,22 +16,28 @@
  */
 
 #include <stdint.h>
+#include <limits.h>
+#include <errno.h>
 #include <Wire.h> //I2C needed for sensors
 #include "SparkFunMPL3115A2.h" //Pressure sensor - Search "SparkFun MPL3115" and install from Library Manager
 #include "SparkFun_Si7021_Breakout_Library.h" //Humidity sensor - Search "SparkFun Si7021" and install from Library Manager
 #include <SPI.h>
-#include "SdFat.h"
-#include "LowPower.h"
+#include <SdFat.h>
+#include <LowPower.h>
+#include <RTClib.h>
 #include "types.h"
 #include "debug.hpp"
 
 #define ARRCNT(x)   (sizeof((x)) / sizeof(*(x)))
+#define STRLEN(x)   (ARRCNT((x)) - 1U)
 
 const uint8_t PIN_SD_CS             = SS;
 SdFat SD;
 
 MPL3115A2 pressureSensor;   //Create an instance of the pressure sensor
 Weather humiditySensor;     //Create an instance of the humidity sensor
+
+RTC_DS3231 rtc;
 
 //Hardware pin definitions
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -44,8 +50,9 @@ const byte PIN_BATTERYSENSOR        = A2;
 
 const unsigned long UPDATE_INTERVAL = 1000UL;
 
-#define LOGFILE_TEXT                "weather.log"
-#define LOGFILE_BINARY              "weather.dat"
+#define LOGDIR                      "weather"
+#define LOGFILE_TEXT                "data.log"
+#define LOGFILE_BINARY              "data.dat"
 
 //Global Variables
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -53,20 +60,26 @@ unsigned long nextUpdate            = 0UL; //The millis counter to see when a se
 unsigned int counter                = 0U;
 
 bool getSensorValues(collection_t& result);
-void saveToFile();
-float getBatteryLevel();
-float getLightLevel();
+void saveToFile(void);
+float getBatteryLevel(void);
+float getLightLevel(void);
 
 bool writeTextFile(const char* const filepath, const collection_t & content);
 bool writeBinaryFile(const char* const filepath, const collection_t& content);
-bool readBinaryFile(const char* const filepath, collection_t* const result, const size_t count, const uint32_t index = 0U);
+bool readBinaryFile(const char* const filepath, collection_t* const result, size_t* const resultCount, const size_t count, const uint32_t index = 0U);
 void printSensorValues(const collection_t& content);
 
-void testReadFromFile();
+void commandMode(void);
 
-#define TEST_INPUT
+void testReadFromFile(void);
 
-void setup()
+#define CMD_INIT    "$$$"
+#define CMD_OK      "OK"
+#define CMD_FAIL    "FAIL"
+#define CMD_UNKNOWN "UNKNOWN"
+#define CMD_DT      "DT"
+
+void setup(void)
 {
     //delay(2500);
     Serial.begin(9600);
@@ -83,8 +96,24 @@ void setup()
     DebugPrintLine("SD card...");
     if(!SD.begin(PIN_SD_CS))
     {
-        DebugPrintLine("Failed");
+        DebugPrintLine("Error: Failed to set up the device");
         while(true);
+    }
+
+    if(!SD.chdir(LOGDIR))
+    {
+        DebugPrintLine("Creating directory log directory...");
+        if(!SD.mkdir(LOGDIR))
+        {
+            DebugPrintLine("Error: Failed to create directory");
+            while(true);
+        }
+
+        if(!SD.chdir(LOGDIR))
+        {
+            DebugPrintLine("Error: Failed to change directory");
+            while(true);
+        }
     }
 
     DebugPrintLine("Weather shield...");
@@ -108,41 +137,44 @@ void setup()
         while(true);
     }
 
+    DebugPrintLine("RTC...");
+    if(!rtc.begin())
+    {
+        DebugPrintLine("Failed");
+        while(true);
+    }
+
+    DateTime tmpTime = rtc.now();
+    DebugPrint("Current time: ");
+    char formatBuffer[] = "YYYY-MM-DD hh:mm:ss";
+    DebugPrint(tmpTime.toString(formatBuffer));
+    DebugPrint(" (");
+    DebugPrint(tmpTime.unixtime());
+    DebugPrintLine(")");
+
+    if(rtc.lostPower())
+    {
+        DebugPrintLine("Warning: RTC may have lost track of time");
+        delay(2500UL);
+    }
+
+    DebugPrintLine("Waiting for setup command...");
+    commandMode();
+
     DebugPrintLine("Done");
     DebugPrintLine();
     DebugFlush();
 
+    //while(true);
+
+    //#define TEST_INPUT
     #ifdef TEST_INPUT
     testReadFromFile();
     while(true);
     #endif
 }
 
-#define TEST_READOFFSET     0U                                          // Position in the file to start reading (should be even divisible by size of 'collection_t').
-#define TEST_ELEMENTCOUNT   2U                                          // How many 'collection_t' to request per read (a.k.a. 'collection_t' count of the buffer).
-#define TEST_READCOUNT      5U                                          // Total number of read operations.
-#define TEST_TOTALCOUNT     ((TEST_ELEMENTCOUNT) * (TEST_READCOUNT))    // The total number of 'collection_t' values to read.
-void testReadFromFile()
-{
-    collection_t vals[TEST_ELEMENTCOUNT];
-    const size_t max = TEST_READOFFSET + TEST_TOTALCOUNT;
-    for(size_t i = TEST_READOFFSET; i < max; i += TEST_ELEMENTCOUNT)
-    {
-        if(!readBinaryFile(LOGFILE_BINARY, vals, TEST_ELEMENTCOUNT, i))
-        {
-            DebugPrintLine("Error: Could not read from file \'" LOGFILE_BINARY "\'");
-            break;
-        }
-
-        for(size_t j = 0U; j < TEST_ELEMENTCOUNT; j++)
-        {
-            DebugPrint("VALUE["); DebugPrint(i + j); DebugPrintLine("]: ");
-            printSensorValues(vals[j]);
-        }
-    }
-}
-
-void loop()
+void loop(void)
 {
     // Enter idle state for 8 s with the rest of peripherals turned off
     // Each microcontroller comes with different number of peripherals
@@ -189,6 +221,86 @@ void loop()
     //DebugPrintLine("Sleep");
 }
 
+#define TEST_READOFFSET     0U                                          // Position in the file to start reading (should be even divisible by size of 'collection_t').
+#define TEST_ELEMENTCOUNT   2U                                          // How many 'collection_t' to request per read (a.k.a. 'collection_t' count of the buffer).
+#define TEST_READCOUNT      5U                                          // Total number of read operations.
+#define TEST_TOTALCOUNT     ((TEST_ELEMENTCOUNT) * (TEST_READCOUNT))    // The total number of 'collection_t' values to read.
+void testReadFromFile(void)
+{
+    collection_t vals[TEST_ELEMENTCOUNT];
+    const size_t max = TEST_READOFFSET + TEST_TOTALCOUNT;
+    for(size_t i = TEST_READOFFSET; i < max; i += TEST_ELEMENTCOUNT)
+    {
+        if(!readBinaryFile(LOGFILE_BINARY, vals, TEST_ELEMENTCOUNT, i))
+        {
+            DebugPrintLine("Error: Could not read from file \'" LOGFILE_BINARY "\'");
+            break;
+        }
+
+        for(size_t j = 0U; j < TEST_ELEMENTCOUNT; j++)
+        {
+            DebugPrint("VALUE["); DebugPrint(i + j); DebugPrintLine("]: ");
+            printSensorValues(vals[j]);
+        }
+    }
+}
+
+void commandMode(void)
+{
+    Serial.setTimeout(2500UL);
+    Serial.println(CMD_INIT);
+
+    char cmdBuffer[16 + 1];
+    size_t cmdLen = Serial.readBytesUntil('\n', cmdBuffer, sizeof(cmdBuffer) - 1);
+    cmdBuffer[cmdLen] = '\0';
+
+    if(strcmp(cmdBuffer, CMD_INIT) == 0)
+    {
+        Serial.println(CMD_OK);
+        Serial.flush();
+
+        Serial.setTimeout(ULONG_MAX);
+        bool active = true;
+        while(active)
+        {
+            do
+            {
+                cmdLen = Serial.readBytesUntil('\n', cmdBuffer, sizeof(cmdBuffer) - 1);
+                cmdBuffer[cmdLen] = '\0';
+
+                if(cmdLen == 0U || strcmp(cmdBuffer, CMD_INIT) == 0)
+                {
+                    active = false;
+                    Serial.println(CMD_OK);
+                }
+                else if(strncmp(cmdBuffer, CMD_DT, STRLEN(CMD_DT)) == 0)
+                {
+                    errno = 0;
+                    unsigned long tmp = strtoul(cmdBuffer + STRLEN(CMD_DT), nullptr, 10);
+                    if(tmp == 0UL || errno != 0)
+                    {
+                        Serial.print(CMD_FAIL);
+                        break;
+                    }
+
+                    DateTime tmpTime = DateTime(tmp);
+                    rtc.adjust(tmpTime);
+                    Serial.print(CMD_OK);
+                    Serial.println(tmpTime.unixtime());
+                }
+                else
+                {
+                    Serial.println(CMD_UNKNOWN);
+                }
+            } while(false); // Easier flow control
+
+            Serial.flush();
+        }
+    }
+
+    Serial.setTimeout(1000UL);  // Restore default timeout
+}
+
 bool getSensorValues(collection_t& result)
 {
     result.data[1].type = 2;
@@ -198,8 +310,8 @@ bool getSensorValues(collection_t& result)
         return false;
     }
 
-    result.header.timestamp = 1582529742 + (millis() / 1000UL); // TODO: Get value from RTC
-    result.header.count = sizeof(result.data) / sizeof(*result.data);
+    result.header.timestamp = rtc.now().unixtime();
+    result.header.count = ARRCNT(result.data);
     result.data[0].type = 1;
     result.data[0].value = humiditySensor.getTemp();
     //result.data[1].type = 2;
@@ -250,8 +362,13 @@ bool writeBinaryFile(const char* const filepath, const collection_t& content)
     return true;
 }
 
-bool readBinaryFile(const char* const filepath, collection_t* const result, const size_t count, const uint32_t index)
+bool readBinaryFile(const char* const filepath, collection_t* const result, size_t* const resultCount, const size_t count, const uint32_t index)
 {
+    if(resultCount != nullptr)
+    {
+        *resultCount = 0U;
+    }
+
     if(count < 1U)
     {
         return false;
@@ -278,7 +395,17 @@ bool readBinaryFile(const char* const filepath, collection_t* const result, cons
         return false;
     }
 
-    file.read(result, totalSize);
+    int readSize = file.read(result, totalSize);
+    if(readSize < 0)
+    {
+        return false;
+    }
+
+    if(resultCount != nullptr)
+    {
+        *resultCount = (size_t)readSize / sizeof(*result);
+    }
+
     file.close();
     return true;
 }
@@ -296,7 +423,7 @@ void printSensorValues(const collection_t& content)
     DebugFlush();
 }
 
-void saveToFile()
+void saveToFile(void)
 {
     collection_t values;
     if(!getSensorValues(values))
@@ -330,7 +457,7 @@ void saveToFile()
 #define WS_VOLTAGE    3.3
 //Returns the voltage of the light sensor based on the 3.3V rail
 //This allows us to ignore what VCC might be (an Arduino plugged into USB has VCC of 4.5 to 5.2V)
-float getLightLevel()
+float getLightLevel(void)
 {
     float operatingVoltage = analogRead(PIN_VREF);
 
@@ -347,7 +474,7 @@ float getLightLevel()
 //This allows us to ignore what VCC might be (an Arduino plugged into USB has VCC of 4.5 to 5.2V)
 //Battery level is connected to the RAW pin on Arduino and is fed through two 5% resistors:
 //3.9K on the high side (R1), and 1K on the low side (R2)
-float getBatteryLevel()
+float getBatteryLevel(void)
 {
     float operatingVoltage = analogRead(PIN_VREF);
 
