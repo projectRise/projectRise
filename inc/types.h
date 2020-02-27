@@ -30,6 +30,6 @@ typedef struct __attribute__((packed))
     header_t header;
     sensordata2_t data[5];
 } collection_t;
-// 40 + (40 * n) bits / (5 + (2 * n)) bytes (240 bits / 30 bytes)
+// 40 + (40 * n) bits / (5 + (5 * n)) bytes (240 bits / 30 bytes)
 
 #endif // __TYPES_H__
