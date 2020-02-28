@@ -23,16 +23,20 @@
 #include "SparkFun_Si7021_Breakout_Library.h" //Humidity sensor - Search "SparkFun Si7021" and install from Library Manager
 #include <SPI.h>
 #include <SdFat.h>
-#include <LowPower.h>
 #include <RTClib.h>
 #include "types.h"
 #include "debug.hpp"
+#include "Sleep_n0m1.h" //A library that sets the Arduino into sleep mode
 
 #define ARRCNT(x)   (sizeof((x)) / sizeof(*(x)))
 #define STRLEN(x)   (ARRCNT((x)) - 1U)
 
 const uint8_t PIN_SD_CS             = SS;
 SdFat SD;
+
+#define timetosleep 50000 //defines how many ms you want arduino to sleep
+Sleep sleep;
+unsigned long sleepTime; //how long you want the arduino to sleep
 
 MPL3115A2 pressureSensor;   //Create an instance of the pressure sensor
 Weather humiditySensor;     //Create an instance of the humidity sensor
@@ -85,6 +89,7 @@ void setup(void)
     //delay(2500);
     Serial.begin(9600);
 
+    sleepTime = timetosleep; //set sleep time in ms, max sleep time is 49.7 days
     //Leds that show status on board
     while(!Serial);
 
@@ -179,49 +184,15 @@ void setup(void)
 
 void loop(void)
 {
-    // Enter idle state for 8 s with the rest of peripherals turned off
-    // Each microcontroller comes with different number of peripherals
-    // Comment off line of code where necessary
-
-    // ATmega328P, ATmega168
-    //LowPower.idle(SLEEP_8S, ADC_OFF, TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, 
-    //              SPI_OFF, USART0_OFF, TWI_OFF);
-
-    // ATmega32U4
-    //LowPower.idle(SLEEP_8S, ADC_OFF, TIMER4_OFF, TIMER3_OFF, TIMER1_OFF, 
-    //		  TIMER0_OFF, SPI_OFF, USART1_OFF, TWI_OFF, USB_OFF);
-
-    // ATmega2560
-    //LowPower.idle(SLEEP_2S, ADC_OFF, TIMER5_OFF, TIMER4_OFF, TIMER3_OFF, 
-    //        TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, SPI_OFF, USART3_OFF, 
-    //        USART2_OFF, USART1_OFF, USART0_OFF, TWI_OFF);
-
-    // ATmega256RFR2
-    //LowPower.idle(SLEEP_8S, ADC_OFF, TIMER5_OFF, TIMER4_OFF, TIMER3_OFF, 
-    //      TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, SPI_OFF,
-    //      USART1_OFF, USART0_OFF, TWI_OFF);
-
     unsigned long now = millis();
     if((long)(now - nextUpdate) >= 0)
     {
-        //Prints before the LowPower.powerSave() function wont run.
-        // ATmega2560
-        digitalWrite(25, LOW);
-        digitalWrite(27, HIGH);
-        LowPower.powerSave(SLEEP_8S, ADC_OFF, BOD_OFF, TIMER2_OFF);
-        DebugPrintLine("Wake up");
-        digitalWrite(27, LOW);
-        digitalWrite(25, LOW);
-        digitalWrite(24, HIGH);
-        //digitalWrite(PIN_STAT_BLUE, HIGH); //Blink stat LED
-
         saveToFile();
-
         nextUpdate += UPDATE_INTERVAL;
     }
-
-    //delay(2000);
-    //DebugPrintLine("Sleep");
+    delay(100); //delay to allow serial to fully print before sleep
+    sleep.pwrDownMode(); //set sleep mode
+    sleep.sleepDelay(sleepTime); //sleep for: sleepTime
 }
 
 #define TEST_READOFFSET     0U                                          // Position in the file to start reading (should be even divisible by size of 'collection_t').
