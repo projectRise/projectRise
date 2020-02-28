@@ -23,7 +23,6 @@
 #include "SparkFun_Si7021_Breakout_Library.h" //Humidity sensor - Search "SparkFun Si7021" and install from Library Manager
 #include <SPI.h>
 #include <SdFat.h>
-#include <LowPower.h>
 #include <RTClib.h>
 #include "types.h"
 #include "LightTracker.hpp"
@@ -213,19 +212,7 @@ void loop(void)
     unsigned long now = millis();
     if((long)(now - nextUpdate) >= 0)
     {
-        //Prints before the LowPower.powerSave() function wont run.
-        // ATmega2560
-        digitalWrite(25, LOW);
-        digitalWrite(27, HIGH);
-        LowPower.powerSave(SLEEP_8S, ADC_OFF, BOD_OFF, TIMER2_OFF);
-        DebugPrintLine("Wake up");
-        digitalWrite(27, LOW);
-        digitalWrite(25, LOW);
-        digitalWrite(24, HIGH);
-        //digitalWrite(PIN_STAT_BLUE, HIGH); //Blink stat LED
-
         saveToFile();
-
         nextUpdate += UPDATE_INTERVAL;
     }
 
