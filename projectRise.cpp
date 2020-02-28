@@ -28,12 +28,17 @@
 #include "types.h"
 #include "LightTracker.hpp"
 #include "debug.hpp"
+#include "Sleep_n0m1.h" //A library that sets the Arduino into sleep mode
 
 #define ARRCNT(x)   (sizeof((x)) / sizeof(*(x)))
 #define STRLEN(x)   (ARRCNT((x)) - 1U)
 
 const uint8_t PIN_SD_CS             = SS;
 SdFat SD;
+
+#define timetosleep 50000 //defines how many ms you want arduino to sleep
+Sleep sleep;
+unsigned long sleepTime; //how long you want the arduino to sleep
 
 MPL3115A2 pressureSensor;   //Create an instance of the pressure sensor
 Weather humiditySensor;     //Create an instance of the humidity sensor
@@ -88,6 +93,7 @@ void setup(void)
     //delay(2500);
     Serial.begin(9600);
 
+    sleepTime = timetosleep; //set sleep time in ms, max sleep time is 49.7 days
     //Leds that show status on board
     while(!Serial);
 
@@ -224,9 +230,8 @@ void loop(void)
     }
 
     lt.Poll();
-
-    //delay(2000);
-    //DebugPrintLine("Sleep");
+    sleep.pwrDownMode(); //set sleep mode
+    sleep.sleepDelay(sleepTime); //sleep for: sleepTime
 }
 
 #define TEST_READOFFSET     0U                                          // Position in the file to start reading (should be even divisible by size of 'collection_t').
