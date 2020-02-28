@@ -26,6 +26,7 @@
 #include <LowPower.h>
 #include <RTClib.h>
 #include "types.h"
+#include "LightTracker.hpp"
 #include "debug.hpp"
 
 #define ARRCNT(x)   (sizeof((x)) / sizeof(*(x)))
@@ -38,6 +39,8 @@ MPL3115A2 pressureSensor;   //Create an instance of the pressure sensor
 Weather humiditySensor;     //Create an instance of the humidity sensor
 
 RTC_DS3231 rtc;
+
+LightTracker lt(10, 9, A2, A3, A0, A1);
 
 //Hardware pin definitions
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -219,6 +222,8 @@ void loop(void)
 
         nextUpdate += UPDATE_INTERVAL;
     }
+
+    lt.Poll();
 
     //delay(2000);
     //DebugPrintLine("Sleep");
