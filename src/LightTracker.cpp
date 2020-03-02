@@ -9,7 +9,7 @@
 #define SERVO_HMIN  15
 #define SERVO_HMAX  165
 
-void LightTracker::Poll(void)
+bool LightTracker::Poll(void)
 {
     int valueUL = analogRead(m_ULPin);  // top left
     int valueUR = analogRead(m_URPin);  // top right
@@ -28,7 +28,9 @@ void LightTracker::Poll(void)
 
     int diffV = avgU - avgD;
     int diffH = avgL - avgR;
-    if(abs(diffV) > m_Tolerance)
+
+    bool isVUpdating = abs(diffV) > m_Tolerance;
+    if(isVUpdating)
     {
         if(diffV > 0)
         {
@@ -43,7 +45,8 @@ void LightTracker::Poll(void)
         m_VerticalMotor.write(m_VerticalMotorPosition);
     }
 
-    if(abs(diffH) > m_Tolerance)
+    bool isHUpdating = abs(diffH) > m_Tolerance;
+    if(isHUpdating)
     {
         if(diffH < 0)
         {
@@ -57,6 +60,8 @@ void LightTracker::Poll(void)
         m_HorizontalMotorPosition = clamp(m_HorizontalMotorPosition, SERVO_HMIN, SERVO_HMAX);
         m_HorizontalMotor.write(m_HorizontalMotorPosition);
     }
+
+    return isVUpdating || isHUpdating;
 }
 
 void LightTracker::Begin(void)

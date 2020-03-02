@@ -24,7 +24,7 @@ private:
     int m_Tolerance;
 
 public:
-    void Poll(void);
+    bool Poll(void);
     void Begin(void);
 
     LightTracker(uint8_t servoHPin, uint8_t servoVPin, uint8_t prULPin, uint8_t prURPin, uint8_t prDLPin, uint8_t prDRPin, int tolerance = 10);

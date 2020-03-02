@@ -197,10 +197,15 @@ void loop(void)
         nextUpdate += UPDATE_INTERVAL;
     }
 
-    lightTracker.Poll();
-    delay(35);
-    //sleep.pwrDownMode(); //set sleep mode
-    //sleep.sleepDelay(sleepTime); //sleep for: sleepTime
+    if(lightTracker.Poll())
+    {
+        delay(35);
+    }
+    else
+    {
+        //sleep.pwrDownMode(); //set sleep mode
+        //sleep.sleepDelay(sleepTime); //sleep for: sleepTime
+    }
 }
 
 #define TEST_READOFFSET     0U                                          // Position in the file to start reading (should be even divisible by size of 'collection_t').
