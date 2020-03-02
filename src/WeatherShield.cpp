@@ -18,7 +18,7 @@ float WeatherShield::GetPressure(void)
 
 // Returns the voltage of the light sensor based on the 3.3V rail
 // This allows us to ignore what VCC might be (an Arduino plugged into USB has VCC of 4.5 to 5.2V)
-float WeatherShield::GetLightLevel(void)
+float WeatherShield::GetLightLevel(void) const
 {
     float operatingVoltage = analogRead(m_VREFPin);
     float lightSensor = analogRead(m_LightSensorPin);
@@ -33,7 +33,7 @@ float WeatherShield::GetLightLevel(void)
 // This allows us to ignore what VCC might be (an Arduino plugged into USB has VCC of 4.5 to 5.2V)
 // Battery level is connected to the RAW pin on Arduino and is fed through two 5% resistors:
 // 3.9K on the high side (R1), and 1K on the low side (R2)
-float WeatherShield::GetBatteryLevel(void)
+float WeatherShield::GetBatteryLevel(void) const
 {
     float operatingVoltage = analogRead(m_VREFPin);
     float rawVoltage = analogRead(m_BatterySensorPin);

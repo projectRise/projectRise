@@ -22,8 +22,8 @@ public:
     float GetTemperature(void);
     float GetHumidity(void);
     float GetPressure(void);
-    float GetLightLevel(void);
-    float GetBatteryLevel(void);
+    float GetLightLevel(void) const;
+    float GetBatteryLevel(void) const;
 
     bool Begin(void);
 
