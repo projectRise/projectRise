@@ -1,0 +1,17 @@
+.gitignore      text eol=lf
+.gitattributes  text eol=lf
+.gitmodules     text eol=lf
+
+# C/C++
+*.c             text diff=c
+*.cpp           text diff=cpp
+*.h             text diff=c
+*.hpp           text diff=cpp
+
+# Python
+*.py            text diff=python
+
+# Misc
+Makefile        text eol=lf
+*.md            text eol=lf
+*.txt           text eol=lf
