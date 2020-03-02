@@ -18,13 +18,11 @@
 #include <stdint.h>
 #include <limits.h>
 #include <errno.h>
-#include <Wire.h> //I2C needed for sensors
-#include "SparkFunMPL3115A2.h" //Pressure sensor - Search "SparkFun MPL3115" and install from Library Manager
-#include "SparkFun_Si7021_Breakout_Library.h" //Humidity sensor - Search "SparkFun Si7021" and install from Library Manager
 #include <SPI.h>
 #include <SdFat.h>
 #include <RTClib.h>
 #include "types.h"
+#include "WeatherShield.hpp"
 #include "LightTracker.hpp"
 #include "debug.hpp"
 #include "Sleep_n0m1.h" //A library that sets the Arduino into sleep mode
@@ -32,15 +30,14 @@
 #define ARRCNT(x)   (sizeof((x)) / sizeof(*(x)))
 #define STRLEN(x)   (ARRCNT((x)) - 1U)
 
-const uint8_t PIN_SD_CS             = SS;
+const uint8_t PIN_SD_CS = SS;
 SdFat SD;
 
 #define timetosleep 50000 //defines how many ms you want arduino to sleep
 Sleep sleep;
 unsigned long sleepTime; //how long you want the arduino to sleep
 
-MPL3115A2 pressureSensor;   //Create an instance of the pressure sensor
-Weather humiditySensor;     //Create an instance of the humidity sensor
+WeatherShield weatherShield(A3, A1, A2, 3.3f);
 
 RTC_DS3231 rtc;
 
@@ -50,10 +47,6 @@ LightTracker lightTracker(44, 45, A8, A9, A10, A11);
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 const byte PIN_STAT_BLUE            = 7;
 const byte PIN_STAT_GREEN           = 8;
-
-const byte PIN_VREF                 = A3;
-const byte PIN_LIGHTSENSOR          = A1;
-const byte PIN_BATTERYSENSOR        = A2;
 
 const unsigned long UPDATE_INTERVAL = 1000UL;
 
@@ -68,8 +61,6 @@ unsigned int counter                = 0U;
 
 bool getSensorValues(collection_t& result);
 void saveToFile(void);
-float getBatteryLevel(void);
-float getLightLevel(void);
 
 bool writeTextFile(const char* const filepath, const collection_t & content);
 bool writeBinaryFile(const char* const filepath, const collection_t& content);
@@ -128,22 +119,11 @@ void setup(void)
     DebugPrintLine("Light tracker...");
     lightTracker.Begin();
 
-    DebugPrintLine("Weather shield...");
     pinMode(PIN_STAT_BLUE, OUTPUT); //Status LED Blue
     pinMode(PIN_STAT_GREEN, OUTPUT); //Status LED Green
 
-    pinMode(PIN_VREF, INPUT);
-    pinMode(PIN_LIGHTSENSOR, INPUT);
-
-    //Configure the pressure sensor
-    pressureSensor.begin(); // Get sensor online
-    pressureSensor.setModeBarometer(); // Measure pressure in Pascals from 20 to 110 kPa
-    pressureSensor.setOversampleRate(7); // Set Oversample to the recommended 128
-    pressureSensor.enableEventFlags(); // Enable all three pressure and temp event flags
-
-    //Configure the humidity sensor
-    humiditySensor.begin();
-    if(humiditySensor.getRH() == 998.0f || pressureSensor.readPressure() < 0.0f) //Humidty sensor failed to respond
+    DebugPrintLine("Weather shield...");
+    if(!weatherShield.Begin())
     {
         DebugPrintLine("Failed");
         while(true);
@@ -308,7 +288,7 @@ void commandMode(void)
 bool getSensorValues(collection_t& result)
 {
     result.data[1].type = 2;
-    result.data[1].value = humiditySensor.getRH();
+    result.data[1].value = weatherShield.GetHumidity();
     if(result.data[2].value == 998)
     {
         return false;
@@ -317,15 +297,15 @@ bool getSensorValues(collection_t& result)
     result.header.timestamp = rtc.now().unixtime();
     result.header.count = ARRCNT(result.data);
     result.data[0].type = 1;
-    result.data[0].value = humiditySensor.getTemp();
+    result.data[0].value = weatherShield.GetTemperature();
     //result.data[1].type = 2;
-    //result.data[1].value = humiditySensor.getRH();
+    //result.data[1].value = weatherShield.GetHumidity();
     result.data[2].type = 3;
-    result.data[2].value = pressureSensor.readPressure();
+    result.data[2].value = weatherShield.GetPressure();
     result.data[3].type = 4;
-    result.data[3].value = getLightLevel();
+    result.data[3].value = weatherShield.GetLightLevel();
     result.data[4].type = 5;
-    result.data[4].value = getBatteryLevel();
+    result.data[4].value = weatherShield.GetBatteryLevel();
 
     return true;
 }
@@ -456,39 +436,4 @@ void saveToFile(void)
     printSensorValues(values);
 
     counter++;
-}
-
-#define WS_VOLTAGE    3.3
-//Returns the voltage of the light sensor based on the 3.3V rail
-//This allows us to ignore what VCC might be (an Arduino plugged into USB has VCC of 4.5 to 5.2V)
-float getLightLevel(void)
-{
-    float operatingVoltage = analogRead(PIN_VREF);
-
-    float lightSensor = analogRead(PIN_LIGHTSENSOR);
-
-    operatingVoltage = WS_VOLTAGE / operatingVoltage; //The reference voltage is 3.3V
-
-    lightSensor = operatingVoltage * lightSensor;
-
-    return lightSensor / WS_VOLTAGE;
-}
-
-//Returns the voltage of the raw pin based on the 3.3V rail
-//This allows us to ignore what VCC might be (an Arduino plugged into USB has VCC of 4.5 to 5.2V)
-//Battery level is connected to the RAW pin on Arduino and is fed through two 5% resistors:
-//3.9K on the high side (R1), and 1K on the low side (R2)
-float getBatteryLevel(void)
-{
-    float operatingVoltage = analogRead(PIN_VREF);
-
-    float rawVoltage = analogRead(PIN_BATTERYSENSOR);
-
-    operatingVoltage = WS_VOLTAGE / operatingVoltage; //The reference voltage is 3.3V
-
-    rawVoltage = operatingVoltage * rawVoltage; //Convert the 0 to 1023 int to actual voltage on PIN_BATTERYSENSOR pin
-
-    rawVoltage *= 4.9; //(3.9k+1k)/1k - multiple PIN_BATTERYSENSOR voltage by the voltage divider to get actual system voltage
-
-    return rawVoltage;
 }
