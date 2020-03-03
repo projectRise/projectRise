@@ -16,8 +16,6 @@
  */
 
 #include <stdint.h>
-#include <limits.h>
-#include <errno.h>
 #include <SPI.h>
 #include <SdFat.h>
 #include <RTClib.h>
@@ -25,6 +23,7 @@
 #include "WeatherShield.hpp"
 #include "LightTracker.hpp"
 #include "CommandHandler.hpp"
+#include "misc.hpp"
 #include "debug.hpp"
 #include "Sleep_n0m1.h" //A library that sets the Arduino into sleep mode
 
@@ -34,81 +33,14 @@
 const uint8_t PIN_SD_CS = SS;
 SdFat SD;
 
-#define timetosleep 5000 //defines how many ms you want arduino to sleep
 Sleep sleep;
-unsigned long sleepTime; //how long you want the arduino to sleep
+unsigned long sleepDuration = 60U * 1000UL; // how long you want the arduino to sleep
 
 WeatherShield weatherShield(A3, A1, A2, 3.3f);
 
 RTC_DS3231 rtc;
 
 LightTracker lightTracker(44, 45, A8, A9, A10, A11);
-
-#define CMD_INIT    "$$$"
-#define CMD_OK      "OK"
-#define CMD_FAIL    "FAIL"
-#define CMD_UNKNOWN "UNKNOWN"
-#define CMD_ABORT   "ABORT"
-#define CMD_DT      "DT"
-
-bool handleCommand(CommandHandler* self, const char* cmd, const char* args)
-{
-    static bool mode = false;
-
-    if(cmd == nullptr)
-    {
-        if(!mode)
-        {
-            return false;
-        }
-        else if(args != nullptr)
-        {
-            self->SendLine(CMD_ABORT);
-            return false;
-        }
-
-        return true;
-    }
-
-    if(strcmp(cmd, CMD_INIT) == 0)
-    {
-        mode = !mode;
-        self->SendLine(CMD_OK);
-        return mode;
-    }
-
-    if(!mode)
-    {
-        return false;
-    }
-    else if(strcmp(cmd, CMD_DT) == 0)
-    {
-        if(args == nullptr)
-        {
-            self->SendLine(CMD_FAIL);
-            return true;
-        }
-
-        errno = 0;
-        unsigned long tmp = strtoul(args, nullptr, 10);
-        if(tmp == 0UL || errno != 0)
-        {
-            self->SendLine(CMD_FAIL);
-            return true;
-        }
-
-        DateTime tmpTime = DateTime(tmp);
-        rtc.adjust(tmpTime);
-        self->Send(CMD_OK " ");
-        self->SendLine(tmpTime.unixtime());
-    }
-    else
-    {
-        self->SendLine(CMD_UNKNOWN);
-    }
-
-    return true;
-}
 
 char commandBuffer[16 + 1];
 CommandHandler commandHandler(Serial, commandBuffer, sizeof(commandBuffer), handleCommand);
@@ -144,7 +76,6 @@ void setup(void)
     //delay(2500);
     Serial.begin(9600);
 
-    sleepTime = timetosleep; //set sleep time in ms, max sleep time is 49.7 days
     //Leds that show status on board
     while(!Serial);
 
@@ -252,7 +183,7 @@ void loop(void)
     else
     {
         //sleep.pwrDownMode(); //set sleep mode
-        //sleep.sleepDelay(sleepTime); //sleep for: sleepTime
+        //sleep.sleepDelay(sleepDuration); //sleep for: sleepDuration
     }
 }
 
