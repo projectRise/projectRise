@@ -1,5 +1,5 @@
 /*! LightTracker.hpp
-    Light source tracker using light sensors and vertical/horizontal servomotors.
+    Light source tracker using photoresistors with vertical/horizontal servomotors.
     \file       LightTracker.hpp
     \authors    albrdev (albrdev@gmail.com)
     \date       2020-02-27
