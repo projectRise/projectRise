@@ -1,3 +1,10 @@
+/*! LightTracker.hpp
+    Light source tracker controller class using light sensors and vertical/horizontal servomotors.
+    \file       LightTracker.hpp
+    \authors    albrdev (albrdev@gmail.com)
+    \date       2020-02-27
+*/
+
 #ifndef __LIGHTTRACKER_HPP__
 #define __LIGHTTRACKER_HPP__
 

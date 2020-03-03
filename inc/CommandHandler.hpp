@@ -1,3 +1,10 @@
+/*! CommandHandler.hpp
+    Class for a more flexible command-like communication between two devices via serial
+    \file       CommandHandler.hpp
+    \authors    albrdev (albrdev@gmail.com)
+    \date       2020-03-02
+*/
+
 #ifndef __COMMANDHANDLER_HPP__
 #define __COMMANDHANDLER_HPP__
 

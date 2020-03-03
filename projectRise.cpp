@@ -1,31 +1,21 @@
-/*
- Weather Shield Example
- By: Nathan Seidle
- SparkFun Electronics
- Date: June 10th, 2016
- License: This code is public domain but you buy me a beer if you use this and we meet someday (Beerware license).
-
- This example prints the current humidity, air pressure, temperature and light levels.
-
- The weather shield is capable of a lot. Be sure to checkout the other more advanced examples for creating
- your own weather station.
-
- Updated by Joel Bartlett
- 03/02/2017
- Removed HTU21D code and replaced with Si7021
- */
+/*! projectRise.cpp
+    Main code of the energy harvesting/weather station project
+    \file       projectRise.cpp
+    \authors    albrdev (albrdev@gmail.com), Ziiny (sebastian.cobert@gmail.com)
+    \date       2020-02-06
+*/
 
 #include <stdint.h>
 #include <SPI.h>
 #include <SdFat.h>
 #include <RTClib.h>
+#include <Sleep_n0m1.h>         //  A library that sets the Arduino into sleep mode
 #include "types.h"
-#include "WeatherShield.hpp"
+#include "WeatherShield.hpp"    // SparkFun weather shield wrapper
 #include "LightTracker.hpp"
 #include "CommandHandler.hpp"
 #include "misc.hpp"
 #include "debug.hpp"
-#include "Sleep_n0m1.h" //A library that sets the Arduino into sleep mode
 
 #define ARRCNT(x)   (sizeof((x)) / sizeof(*(x)))
 #define STRLEN(x)   (ARRCNT((x)) - 1U)

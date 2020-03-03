@@ -1,3 +1,10 @@
+/*! WeatherShield.hpp
+    Wrapper class for SparkFun's weather shield
+    \file       WeatherShield.hpp
+    \authors    albrdev (albrdev@gmail.com)
+    \date       2020-03-02
+*/
+
 #ifndef __WEATHERSHIELD_HPP__
 #define __WEATHERSHIELD_HPP__
 
