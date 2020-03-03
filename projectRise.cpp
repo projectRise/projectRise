@@ -137,16 +137,7 @@ bool writeBinaryFile(const char* const filepath, const collection_t& content);
 bool readBinaryFile(const char* const filepath, collection_t* const result, size_t* const resultCount, const size_t count, const size_t index = 0U);
 void printSensorValues(const collection_t& content);
 
-void commandMode(void);
-
 void testReadFromFile(void);
-
-#define CMD_INIT    "$$$"
-#define CMD_OK      "OK"
-#define CMD_FAIL    "FAIL"
-#define CMD_UNKNOWN "UNKNOWN"
-#define CMD_ABORT   "ABORT"
-#define CMD_DT      "DT"
 
 void setup(void)
 {
