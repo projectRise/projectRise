@@ -18,8 +18,10 @@ private:
     uint8_t m_DLPin;
     uint8_t m_DRPin;
 
-    int m_HorizontalMotorPosition;
-    int m_VerticalMotorPosition;
+    int m_HoriztonalAngleMin;
+    int m_HoriztonalAngleMax;
+    int m_VerticalAngleMin;
+    int m_VerticalAngleMax;
 
     int m_Tolerance;
 
@@ -27,7 +29,7 @@ public:
     bool Poll(void);
     void Begin(void);
 
-    LightTracker(uint8_t servoHPin, uint8_t servoVPin, uint8_t prULPin, uint8_t prURPin, uint8_t prDLPin, uint8_t prDRPin, int tolerance = 10);
+    LightTracker(uint8_t servoHPin, uint8_t servoVPin, uint8_t prULPin, uint8_t prURPin, uint8_t prDLPin, uint8_t prDRPin, int tolerance = 10, int angleHMargin = 15, int angleVMargin = 15);
 };
 
 #endif // __LIGHTTRACKER_HPP__
