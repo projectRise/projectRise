@@ -25,13 +25,15 @@ def receiveResponse(sp):
 
     return tmp[:length - count]
 
-def sendCommand(sp, cmd, *args): 
+def sendCommand(sp, cmd, *args):
     res = cmd.encode('utf-8')
     count = len(args)
-    for i in range(count): 
-        res += str(args[i]).encode('utf-8')
-        if i < count - 1:
-            res += b','
+    if count > 0:
+        res += ' '.encode('utf-8')
+        for i in range(count): 
+            res += str(args[i]).encode('utf-8')
+            if i < count - 1:
+                res += b','
 
     sp.write(res + b'\r\n')
 
