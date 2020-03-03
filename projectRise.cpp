@@ -24,6 +24,7 @@
 #include "types.h"
 #include "WeatherShield.hpp"
 #include "LightTracker.hpp"
+#include "CommandHandler.hpp"
 #include "debug.hpp"
 #include "Sleep_n0m1.h" //A library that sets the Arduino into sleep mode
 
@@ -33,7 +34,7 @@
 const uint8_t PIN_SD_CS = SS;
 SdFat SD;
 
-#define timetosleep 50000 //defines how many ms you want arduino to sleep
+#define timetosleep 5000 //defines how many ms you want arduino to sleep
 Sleep sleep;
 unsigned long sleepTime; //how long you want the arduino to sleep
 
@@ -43,12 +44,81 @@ RTC_DS3231 rtc;
 
 LightTracker lightTracker(44, 45, A8, A9, A10, A11);
 
+#define CMD_INIT    "$$$"
+#define CMD_OK      "OK"
+#define CMD_FAIL    "FAIL"
+#define CMD_UNKNOWN "UNKNOWN"
+#define CMD_ABORT   "ABORT"
+#define CMD_DT      "DT"
+
+bool handleCommand(CommandHandler* self, const char* cmd, const char* args)
+{
+    static bool mode = false;
+
+    if(cmd == nullptr)
+    {
+        if(!mode)
+        {
+            return false;
+        }
+        else if(args != nullptr)
+        {
+            self->SendLine(CMD_ABORT);
+            return false;
+        }
+
+        return true;
+    }
+
+    if(strcmp(cmd, CMD_INIT) == 0)
+    {
+        mode = !mode;
+        self->SendLine(CMD_OK);
+        return mode;
+    }
+
+    if(!mode)
+    {
+        return false;
+    }
+    else if(strcmp(cmd, CMD_DT) == 0)
+    {
+        if(args == nullptr)
+        {
+            self->SendLine(CMD_FAIL);
+            return true;
+        }
+
+        errno = 0;
+        unsigned long tmp = strtoul(args, nullptr, 10);
+        if(tmp == 0UL || errno != 0)
+        {
+            self->SendLine(CMD_FAIL);
+            return true;
+        }
+
+        DateTime tmpTime = DateTime(tmp);
+        rtc.adjust(tmpTime);
+        self->Send(CMD_OK " ");
+        self->SendLine(tmpTime.unixtime());
+    }
+    else
+    {
+        self->SendLine(CMD_UNKNOWN);
+    }
+
+    return true;
+}
+
+char commandBuffer[16 + 1];
+CommandHandler commandHandler(Serial, commandBuffer, sizeof(commandBuffer), handleCommand);
+
 //Hardware pin definitions
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 const byte PIN_STAT_BLUE            = 7;
 const byte PIN_STAT_GREEN           = 8;
 
-const unsigned long UPDATE_INTERVAL = 1000UL;
+const unsigned long UPDATE_INTERVAL = 60000UL;
 
 #define LOGDIR                      "weather"
 #define LOGFILE_TEXT                "data.log"
@@ -93,9 +163,12 @@ void setup(void)
     pinMode(25, OUTPUT);
     pinMode(27, OUTPUT);
 
+    pinMode(9, OUTPUT);
+
     DebugPrintLine("SD card...");
     if(!SD.begin(PIN_SD_CS))
     {
+        digitalWrite(9, HIGH);
         DebugPrintLine("Error: Failed to set up the device");
         while(true);
     }
@@ -152,7 +225,11 @@ void setup(void)
 
     DebugPrintLine("Waiting for setup command...");
     Serial.setTimeout(2500UL);
-    commandMode();
+    Serial.println(CMD_INIT);
+    while(commandHandler.Receive())
+    {
+        commandHandler.Flush();
+    }
     Serial.setTimeout(1000UL); // Restore default timeout
 
     DebugPrintLine("Done");
@@ -210,78 +287,6 @@ void testReadFromFile(void)
             DebugPrint("VALUE["); DebugPrint(i + j); DebugPrintLine("]: ");
             printSensorValues(vals[j]);
         }
-    }
-}
-
-void commandMode(void)
-{
-    Serial.println(CMD_INIT);
-
-    #define CMD_BUFSIZE 16
-    char cmdBuffer[16 + 1];
-    size_t cmdLen = Serial.readBytesUntil('\n', cmdBuffer, sizeof(cmdBuffer));
-    if(cmdLen == 0U)
-    {
-        return;
-    }
-    else if(cmdBuffer[cmdLen - 1] != '\r')
-    {
-        Serial.println(CMD_ABORT);
-        return;
-    }
-
-    cmdBuffer[cmdLen - 1] = '\0';
-    if(strcmp(cmdBuffer, CMD_INIT) != 0)
-    {
-        Serial.print(CMD_FAIL);
-        return;
-    }
-
-    Serial.println(CMD_OK);
-    Serial.flush();
-
-    Serial.setTimeout(ULONG_MAX);
-    bool active = true;
-    while(active)
-    {
-        do
-        {
-            cmdLen = Serial.readBytesUntil('\n', cmdBuffer, sizeof(cmdBuffer));
-            if(cmdLen == 0U || cmdBuffer[cmdLen - 1] != '\r')
-            {
-                active = false;
-                Serial.println(CMD_ABORT);
-                break;
-            }
-
-            cmdBuffer[cmdLen - 1] = '\0';
-            if(strcmp(cmdBuffer, CMD_INIT) == 0)
-            {
-                active = false;
-                Serial.println(CMD_OK);
-            }
-            else if(strncmp(cmdBuffer, CMD_DT, STRLEN(CMD_DT)) == 0)
-            {
-                errno = 0;
-                unsigned long tmp = strtoul(cmdBuffer + STRLEN(CMD_DT), nullptr, 10);
-                if(tmp == 0UL || errno != 0)
-                {
-                    Serial.print(CMD_FAIL);
-                    break;
-                }
-
-                DateTime tmpTime = DateTime(tmp);
-                rtc.adjust(tmpTime);
-                Serial.print(CMD_OK);
-                Serial.println(tmpTime.unixtime());
-            }
-            else
-            {
-                Serial.println(CMD_UNKNOWN);
-            }
-        } while(false); // Easier flow control
-
-        Serial.flush();
     }
 }
 
