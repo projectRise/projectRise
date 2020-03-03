@@ -1,11 +1,6 @@
 #include "LightTracker.hpp"
 #include <Arduino.h>
 
-#define clamp(x, a, b) ((x) < (a) ? (a) : ((x) > (b) ? (b) : (x)))  // x < a ? a : (x > b ? b : x)
-
-#define SERVO_VMIN  15
-#define SERVO_VMAX  90
-
 #define SERVO_ANGLE_MIN 0
 #define SERVO_ANGLE_MAX 180
 

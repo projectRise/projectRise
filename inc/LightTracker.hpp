@@ -10,20 +10,21 @@ private:
     uint8_t m_HorizontalMotorPin;
     uint8_t m_VerticalMotorPin;
 
-    Servo m_HorizontalMotor;
-    Servo m_VerticalMotor;
-
     uint8_t m_ULPin;
     uint8_t m_URPin;
     uint8_t m_DLPin;
     uint8_t m_DRPin;
+
+    int m_Tolerance;
 
     int m_HoriztonalAngleMin;
     int m_HoriztonalAngleMax;
     int m_VerticalAngleMin;
     int m_VerticalAngleMax;
 
-    int m_Tolerance;
+    Servo m_HorizontalMotor;
+    Servo m_VerticalMotor;
+
 
 public:
     bool Poll(void);

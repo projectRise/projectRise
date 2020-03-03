@@ -33,8 +33,7 @@
 const uint8_t PIN_SD_CS = SS;
 SdFat SD;
 
-Sleep sleep;
-unsigned long sleepDuration = 60U * 1000UL; // how long you want the arduino to sleep
+unsigned long sleepDuration = 60UL * 1000UL; // Sleep duration between measurements
 
 WeatherShield weatherShield(A3, A1, A2, 3.3f);
 
@@ -45,19 +44,10 @@ LightTracker lightTracker(44, 45, A8, A9, A10, A11);
 char commandBuffer[16 + 1];
 CommandHandler commandHandler(Serial, commandBuffer, sizeof(commandBuffer), handleCommand);
 
-//Hardware pin definitions
-//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-const byte PIN_STAT_BLUE            = 7;
-const byte PIN_STAT_GREEN           = 8;
-
-const unsigned long UPDATE_INTERVAL = 60000UL;
-
 #define LOGDIR                      "weather"
 #define LOGFILE_TEXT                "data.log"
 #define LOGFILE_BINARY              "data.dat"
 
-//Global Variables
-//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 unsigned long nextUpdate            = 0UL; //The millis counter to see when a second rolls by
 unsigned int counter                = 0U;
 
@@ -80,12 +70,6 @@ void setup(void)
     while(!Serial);
 
     DebugPrintLine("Initializing...");
-
-    pinMode(24, OUTPUT);
-    pinMode(25, OUTPUT);
-    pinMode(27, OUTPUT);
-
-    pinMode(9, OUTPUT);
 
     DebugPrintLine("SD card...");
     if(!SD.begin(PIN_SD_CS))
@@ -113,9 +97,6 @@ void setup(void)
 
     DebugPrintLine("Light tracker...");
     lightTracker.Begin();
-
-    pinMode(PIN_STAT_BLUE, OUTPUT); //Status LED Blue
-    pinMode(PIN_STAT_GREEN, OUTPUT); //Status LED Green
 
     DebugPrintLine("Weather shield...");
     if(!weatherShield.Begin())
@@ -173,7 +154,7 @@ void loop(void)
     if((long)(now - nextUpdate) >= 0)
     {
         saveToFile();
-        nextUpdate += UPDATE_INTERVAL;
+        nextUpdate += sleepDuration;
     }
 
     if(lightTracker.Poll())
