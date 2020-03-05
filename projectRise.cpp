@@ -20,6 +20,8 @@
 #define ARRCNT(x)   (sizeof((x)) / sizeof(*(x)))
 #define STRLEN(x)   (ARRCNT((x)) - 1U)
 
+#define ANALOG_MAX  ((1 << 10) - 1)
+
 const uint8_t PIN_SD_CS = SS;
 SdFat SD;
 
@@ -29,7 +31,7 @@ WeatherShield weatherShield(A3, A1, A2, 3.3f);
 
 RTC_DS3231 rtc;
 
-LightTracker lightTracker(44, 45, A8, A9, A10, A11);
+LightTracker lightTracker(44, 45, A8, A9, A10, A11, 0.25 * ANALOG_MAX, 0.05 * ANALOG_MAX);
 
 char commandBuffer[16 + 1];
 CommandHandler commandHandler(Serial, commandBuffer, sizeof(commandBuffer), handleCommand);
@@ -149,7 +151,7 @@ void loop(void)
 
     if(lightTracker.Poll())
     {
-        delay(35);
+        delay(20);
     }
     else
     {
