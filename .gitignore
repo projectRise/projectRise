@@ -8,3 +8,6 @@ Debug/
 Release/
 *.sln
 *.vcxproj*
+
+# Config
+config.h
