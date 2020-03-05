@@ -22,6 +22,7 @@ private:
     uint8_t m_DLPin;
     uint8_t m_DRPin;
 
+    int m_ActiveLightLevel;
     int m_Tolerance;
 
     int m_HoriztonalAngleMin;
@@ -34,10 +35,13 @@ private:
 
 
 public:
+    int GetHorizontalPosition(void);
+    int GetVerticalPosition(void);
+
     bool Poll(void);
     void Begin(void);
 
-    LightTracker(uint8_t servoHPin, uint8_t servoVPin, uint8_t prULPin, uint8_t prURPin, uint8_t prDLPin, uint8_t prDRPin, int tolerance = 10, int angleHMargin = 15, int angleVMargin = 15);
+    LightTracker(uint8_t servoHPin, uint8_t servoVPin, uint8_t prULPin, uint8_t prURPin, uint8_t prDLPin, uint8_t prDRPin, int activeLightLevel = 250, int tolerance = 50, int angleHMargin = 15, int angleVMargin = 15);
 };
 
 #endif // __LIGHTTRACKER_HPP__
