@@ -5,25 +5,37 @@
     \date       2020-02-06
 */
 
+//#define ENABLE_SOFTWARE_SPI_CLASS 1
+
 #include <stdint.h>
 #include <SPI.h>
 #include <SdFat.h>
 #include <RTClib.h>
 #include <Sleep_n0m1.h>         //  A library that sets the Arduino into sleep mode
+#include <lmic.h>
+#include <hal/hal.h>
 #include "types.h"
+#include "lora.hpp"
 #include "WeatherShield.hpp"    // SparkFun weather shield wrapper
 #include "LightTracker.hpp"
 #include "CommandHandler.hpp"
 #include "misc.hpp"
 #include "debug.hpp"
+#include "sdios.h"
+
+#define USE_SDIO 0
 
 #define ARRCNT(x)   (sizeof((x)) / sizeof(*(x)))
 #define STRLEN(x)   (ARRCNT((x)) - 1U)
 
 #define ANALOG_MAX  ((1 << 10) - 1)
 
-const uint8_t PIN_SD_CS = SS;
-SdFat SD;
+#define CONFIG_MISO_PIN 3
+#define CONFIG_MOSI_PIN 4
+#define CONFIG_SCK_PIN  5
+#define CONFIG_CS_PIN   22
+//SdFat sd;
+SdFatSoftSpi<CONFIG_MISO_PIN, CONFIG_MOSI_PIN, CONFIG_SCK_PIN> sd;
 
 unsigned long sleepDuration = 60UL * 1000UL; // Sleep duration between measurements
 
@@ -40,7 +52,7 @@ CommandHandler commandHandler(Serial, commandBuffer, sizeof(commandBuffer), hand
 #define LOGFILE_TEXT                "data.log"
 #define LOGFILE_BINARY              "data.dat"
 
-unsigned long nextUpdate            = 0UL; //The millis counter to see when a second rolls by
+unsigned long nextUpdate            = 0UL; // The millis counter to see when a second rolls by
 unsigned int counter                = 0U;
 
 bool getSensorValues(collection_t& result);
@@ -64,28 +76,31 @@ void setup(void)
     DebugPrintLine("Initializing...");
 
     DebugPrintLine("SD card...");
-    if(!SD.begin(PIN_SD_CS))
+    if(!sd.begin(CONFIG_CS_PIN))
     {
         digitalWrite(9, HIGH);
         DebugPrintLine("Error: Failed to set up the device");
         while(true);
     }
 
-    if(!SD.chdir(LOGDIR))
+    if(!sd.chdir(LOGDIR))
     {
         DebugPrintLine("Creating directory log directory...");
-        if(!SD.mkdir(LOGDIR))
+        if(!sd.mkdir(LOGDIR))
         {
             DebugPrintLine("Error: Failed to create directory");
             while(true);
         }
 
-        if(!SD.chdir(LOGDIR))
+        if(!sd.chdir(LOGDIR))
         {
             DebugPrintLine("Error: Failed to change directory");
             while(true);
         }
     }
+
+    DebugPrintLine("LoRa...");
+    setupLoRa();
 
     DebugPrintLine("Light tracker...");
     lightTracker.Begin();
@@ -131,7 +146,7 @@ void setup(void)
     DebugPrintLine();
     DebugFlush();
 
-    //while(true);
+    while(true);
 
     //#define TEST_INPUT
     #ifdef TEST_INPUT
@@ -148,6 +163,8 @@ void loop(void)
         saveToFile();
         nextUpdate += sleepDuration;
     }
+
+    os_runloop_once();
 
     if(lightTracker.Poll())
     {
@@ -212,7 +229,7 @@ bool getSensorValues(collection_t& result)
 
 bool writeTextFile(const char* const filepath, const collection_t& content)
 {
-    File file = SD.open(filepath, FILE_WRITE);
+    File file = sd.open(filepath, FILE_WRITE);
     if(!file)
     {
         return false;
@@ -234,7 +251,7 @@ bool writeTextFile(const char* const filepath, const collection_t& content)
 
 bool writeBinaryFile(const char* const filepath, const collection_t& content)
 {
-    File file = SD.open(filepath, FILE_WRITE);
+    File file = sd.open(filepath, FILE_WRITE);
     if(!file)
     {
         return false;
@@ -258,7 +275,7 @@ bool readBinaryFile(const char* const filepath, collection_t* const result, size
         return false;
     }
 
-    File file = SD.open(filepath, FILE_READ);
+    File file = sd.open(filepath, FILE_READ);
     if(!file)
     {
         return false;
@@ -307,33 +324,38 @@ void printSensorValues(const collection_t& content)
     DebugFlush();
 }
 
+collection_t measurementBuffer;
 void saveToFile(void)
 {
-    collection_t values;
-    if(!getSensorValues(values))
+    if(!getSensorValues(measurementBuffer))
     {
         DebugPrintLine("Error: Failed to retrieve sensor values");
         return;
     }
 
+    DebugPrint("VALUE["); DebugPrint(counter); DebugPrintLine("]: "); //*
+    printSensorValues(measurementBuffer); //*
+    counter++; //*
+    return; //*
+
     // open the file. note that only one file can be open at a time,
     // so you have to close this one before opening another.
     #ifdef OUTPUT_TEXT
-    if(!writeTextFile(LOGFILE_TEXT, values))
+    if(!writeTextFile(LOGFILE_TEXT, measurementBuffer))
     {
         DebugPrintLine("Error: Could not open \'" LOGFILE_TEXT "\' for writing");
     }
     #endif
 
     #ifdef OUTPUT_BINARY
-    if(!writeBinaryFile(LOGFILE_BINARY, values))
+    if(!writeBinaryFile(LOGFILE_BINARY, measurementBuffer))
     {
         DebugPrintLine("Error: Could not open \'" LOGFILE_BINARY "\' for writing");
     }
     #endif
 
     DebugPrint("VALUE["); DebugPrint(counter); DebugPrintLine("]: ");
-    printSensorValues(values);
+    printSensorValues(measurementBuffer);
 
     counter++;
 }
