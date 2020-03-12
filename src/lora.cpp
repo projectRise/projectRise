@@ -19,7 +19,7 @@ const lmic_pinmap lmic_pins =
     .nss = 10,
     .rxtx = LMIC_UNUSED_PIN,
     .rst = 9,
-    .dio = { 2, 6, 7 },
+    .dio = { 2, 6, 7 }
 };
 
 static osjob_t sendjob;
@@ -195,5 +195,6 @@ void setupLoRa(void)
     //LMIC_setDrTxpow(DR_SF12, 14);
 
     // Start job
-    sendData(&sendjob);
+    //sendData(&sendjob);
+    os_setTimedCallback(&sendjob, os_getTime()/* + sec2osticks(CONFIG_INTERVAL)*/, sendData);
 }
