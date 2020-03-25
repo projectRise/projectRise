@@ -14,6 +14,8 @@ static const PROGMEM u4_t NETID = CONFIG_NETID;
 #error "LoRaWAN credentials are not defined"
 #endif
 
+#define CONFIG_INTERVAL 60UL
+
 const lmic_pinmap lmic_pins =
 {
     .nss = 10,
