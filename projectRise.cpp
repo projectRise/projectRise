@@ -16,12 +16,16 @@
 #include <hal/hal.h>
 #include "types.h"
 #include "lora.hpp"
-#include "WeatherShield.hpp"    // SparkFun weather shield wrapper
+//#include "WeatherShield.hpp"    // SparkFun weather shield wrapper
 #include "LightTracker.hpp"
 #include "CommandHandler.hpp"
 #include "misc.hpp"
 #include "debug.hpp"
 #include "sdios.h"
+
+#include <Wire.h>
+//#include <SPI.h>
+#include <Adafruit_BMP280.h>
 
 #define USE_SDIO 0
 
@@ -30,20 +34,22 @@
 
 #define ANALOG_MAX  ((1 << 10) - 1)
 
-#define CONFIG_MISO_PIN 3
-#define CONFIG_MOSI_PIN 4
-#define CONFIG_SCK_PIN  5
+#define CONFIG_MISO_PIN 24
+#define CONFIG_MOSI_PIN 23
+#define CONFIG_SCK_PIN  25
 #define CONFIG_CS_PIN   22
 //SdFat sd;
 SdFatSoftSpi<CONFIG_MISO_PIN, CONFIG_MOSI_PIN, CONFIG_SCK_PIN> sd;
 
 unsigned long sleepDuration = 60UL * 1000UL; // Sleep duration between measurements
 
-WeatherShield weatherShield(A3, A1, A2, 3.3f);
+//WeatherShield weatherShield(A3, A1, A2, 3.3f);
 
 RTC_DS3231 rtc;
 
 LightTracker lightTracker(44, 45, A8, A9, A10, A11, 0.25 * ANALOG_MAX, 0.05 * ANALOG_MAX);
+
+Adafruit_BMP280 bmp;
 
 char commandBuffer[16 + 1];
 CommandHandler commandHandler(Serial, commandBuffer, sizeof(commandBuffer), handleCommand);
@@ -64,6 +70,25 @@ bool readBinaryFile(const char* const filepath, collection_t* const result, size
 void printSensorValues(const collection_t& content);
 
 void testReadFromFile(void);
+
+bool setupSensors(void)
+{
+    DebugPrintLine("BMP280...");
+    if(!bmp.begin())
+    {
+        DebugPrintLine(F("Failed"));
+        while(true);
+    }
+
+    bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
+                    Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
+                    Adafruit_BMP280::SAMPLING_X16,    /* Pressure oversampling */
+                    Adafruit_BMP280::FILTER_X16,      /* Filtering. */
+                    Adafruit_BMP280::STANDBY_MS_500); /* Standby time. */
+
+    pinMode(A15, INPUT);
+    return true;
+}
 
 void setup(void)
 {
@@ -105,12 +130,15 @@ void setup(void)
     DebugPrintLine("Light tracker...");
     lightTracker.Begin();
 
-    DebugPrintLine("Weather shield...");
+    /*DebugPrintLine("Weather shield...");
     if(!weatherShield.Begin())
     {
         DebugPrintLine("Failed");
         while(true);
-    }
+    }*/
+
+    DebugPrintLine("Sensors...");
+    setupSensors();
 
     DebugPrintLine("RTC...");
     if(!rtc.begin())
@@ -146,7 +174,7 @@ void setup(void)
     DebugPrintLine();
     DebugFlush();
 
-    while(true);
+    //while(true);
 
     //#define TEST_INPUT
     #ifdef TEST_INPUT
@@ -204,6 +232,27 @@ void testReadFromFile(void)
 
 bool getSensorValues(collection_t& result)
 {
+    Adafruit_Sensor* bmpTemp = bmp.getTemperatureSensor();
+    Adafruit_Sensor* bmpPressure = bmp.getPressureSensor();
+
+    sensors_event_t temp_event, pressure_event;
+    bmpTemp->getEvent(&temp_event);
+    bmpPressure->getEvent(&pressure_event);
+
+    result.header.timestamp = rtc.now().unixtime();
+    result.header.count = ARRCNT(result.data);
+    result.data[0].type = 1;
+    result.data[0].value = temp_event.temperature;
+    result.data[1].type = 2;
+    result.data[1].value = pressure_event.pressure;
+    result.data[2].type = 3;
+    result.data[2].value =  (float)analogRead(A15) / (float)ANALOG_MAX;
+
+    return true;
+}
+
+/*bool getSensorValues(collection_t& result)
+{
     result.data[1].type = 2;
     result.data[1].value = weatherShield.GetHumidity();
     if(result.data[2].value == 998)
@@ -225,9 +274,29 @@ bool getSensorValues(collection_t& result)
     result.data[4].value = weatherShield.GetBatteryLevel();
 
     return true;
-}
+}*/
 
 bool writeTextFile(const char* const filepath, const collection_t& content)
+{
+    File file = sd.open(filepath, FILE_WRITE);
+    if(!file)
+    {
+        return false;
+    }
+
+    file.print("timestamp=");    file.print(content.header.timestamp);    file.print(", ");
+    file.print("count=");        file.print(content.header.count);        file.print(", ");
+    file.print("temperature=");  file.print(content.data[0].value, 2);    file.print(", ");
+    file.print("pressure=");     file.print(content.data[2].value, 2);    file.print(", ");
+    file.print("light=");        file.print(content.data[3].value, 2);
+    file.println();
+    file.flush();
+
+    file.close();
+    return true;
+}
+
+/*bool writeTextFile(const char* const filepath, const collection_t& content)
 {
     File file = sd.open(filepath, FILE_WRITE);
     if(!file)
@@ -247,7 +316,7 @@ bool writeTextFile(const char* const filepath, const collection_t& content)
 
     file.close();
     return true;
-}
+}*/
 
 bool writeBinaryFile(const char* const filepath, const collection_t& content)
 {
@@ -316,13 +385,24 @@ void printSensorValues(const collection_t& content)
     DebugPrint("timestamp=");   DebugPrint(content.header.timestamp);   DebugPrint(", ");
     DebugPrint("count=");       DebugPrint(content.header.count);       DebugPrint(", ");
     DebugPrint("temperature="); DebugPrint(content.data[0].value, 2);   DebugPrint(", ");
+    DebugPrint("pressure=");    DebugPrint(content.data[1].value, 2);   DebugPrint(", ");
+    DebugPrint("light=");       DebugPrint(content.data[2].value, 2);
+    DebugPrintLine();
+    DebugFlush();
+}
+
+/*void printSensorValues(const collection_t& content)
+{
+    DebugPrint("timestamp=");   DebugPrint(content.header.timestamp);   DebugPrint(", ");
+    DebugPrint("count=");       DebugPrint(content.header.count);       DebugPrint(", ");
+    DebugPrint("temperature="); DebugPrint(content.data[0].value, 2);   DebugPrint(", ");
     DebugPrint("humidity=");    DebugPrint(content.data[1].value, 2);   DebugPrint(", ");
     DebugPrint("pressure=");    DebugPrint(content.data[2].value, 2);   DebugPrint(", ");
     DebugPrint("light=");       DebugPrint(content.data[3].value, 2);   DebugPrint(", ");
     DebugPrint("battery=");     DebugPrint(content.data[4].value, 2);
     DebugPrintLine();
     DebugFlush();
-}
+}*/
 
 collection_t measurementBuffer;
 void saveToFile(void)
