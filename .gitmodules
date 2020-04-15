@@ -1,0 +1,5 @@
+[submodule "test/Unity"]
+	path = test/Unity
+	url = git@github.com:ThrowTheSwitch/Unity.git
+	url = https://github.com/ThrowTheSwitch/Unity.git
+	branch = master
