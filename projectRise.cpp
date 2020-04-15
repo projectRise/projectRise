@@ -176,7 +176,6 @@ void setup(void)
         DebugPrintLine("Failed");
         while(true);
     }
-    
 
     DateTime tmpTime = rtc.now();
     DebugPrint("Current time: ");
@@ -291,31 +290,6 @@ bool getSensorValues(collection_t& result)
     return true;
 }
 
-/*bool getSensorValues(collection_t& result)
-{
-    result.data[1].type = 2;
-    result.data[1].value = weatherShield.GetHumidity();
-    if(result.data[2].value == 998)
-    {
-        return false;
-    }
-
-    result.header.timestamp = rtc.now().unixtime();
-    result.header.count = ARRCNT(result.data);
-    result.data[0].type = 1;
-    result.data[0].value = weatherShield.GetTemperature();
-    //result.data[1].type = 2;
-    //result.data[1].value = weatherShield.GetHumidity();
-    result.data[2].type = 3;
-    result.data[2].value = weatherShield.GetPressure();
-    result.data[3].type = 4;
-    result.data[3].value = weatherShield.GetLightLevel();
-    result.data[4].type = 5;
-    result.data[4].value = weatherShield.GetBatteryLevel();
-
-    return true;
-}*/
-
 bool writeTextFile(const char* const filepath, const collection_t& content)
 {
     File file = sd.open(filepath, FILE_WRITE);
@@ -335,28 +309,6 @@ bool writeTextFile(const char* const filepath, const collection_t& content)
     file.close();
     return true;
 }
-
-/*bool writeTextFile(const char* const filepath, const collection_t& content)
-{
-    File file = sd.open(filepath, FILE_WRITE);
-    if(!file)
-    {
-        return false;
-    }
-
-    file.print("timestamp=");    file.print(content.header.timestamp);    file.print(", ");
-    file.print("count=");        file.print(content.header.count);        file.print(", ");
-    file.print("temperature=");  file.print(content.data[0].value, 2);    file.print(", ");
-    file.print("humidity=");     file.print(content.data[1].value, 2);    file.print(", ");
-    file.print("pressure=");     file.print(content.data[2].value, 2);    file.print(", ");
-    file.print("light=");        file.print(content.data[3].value, 2);    file.print(", ");
-    file.print("battery=");      file.print(content.data[4].value, 2);
-    file.println();
-    file.flush();
-
-    file.close();
-    return true;
-}*/
 
 bool writeBinaryFile(const char* const filepath, const collection_t& content)
 {
