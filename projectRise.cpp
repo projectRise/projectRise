@@ -16,7 +16,7 @@
 #include <hal/hal.h>
 #include "types.h"
 #include "lora.hpp"
-//#include "WeatherShield.hpp"    // SparkFun weather shield wrapper
+#include "WeatherShield.hpp"    // SparkFun weather shield wrapper
 #include "LightTracker.hpp"
 #include "CommandHandler.hpp"
 #include "misc.hpp"
@@ -34,22 +34,41 @@
 
 #define ANALOG_MAX  ((1 << 10) - 1)
 
+//Enable disable modules
+#define SD_ENABLE
+//#define LORA_ENABLE
+//#define WEATHERSHIELD_ENABLE
+#define LIGHT_TRACKER_ENABLE
+#define RTC_ENABLE
+#define BMP_ENABLE
+//#define SLEEP_ENABLE
+
+#ifdef SD_ENABLE
 #define CONFIG_MISO_PIN 24
 #define CONFIG_MOSI_PIN 23
 #define CONFIG_SCK_PIN  25
 #define CONFIG_CS_PIN   22
 //SdFat sd;
 SdFatSoftSpi<CONFIG_MISO_PIN, CONFIG_MOSI_PIN, CONFIG_SCK_PIN> sd;
+#endif
 
 unsigned long sleepDuration = 60UL * 1000UL; // Sleep duration between measurements
 
-//WeatherShield weatherShield(A3, A1, A2, 3.3f);
+#ifdef WEATHERSHIELD_ENABLE
+WeatherShield weatherShield(A3, A1, A2, 3.3f);
+#endif
 
+#ifdef RTC_ENABLE
 RTC_DS3231 rtc;
+#endif
 
+#ifdef LIGHT_TRACKER_ENABLE
 LightTracker lightTracker(44, 45, A8, A9, A10, A11, 0.25 * ANALOG_MAX, 0.05 * ANALOG_MAX);
+#endif
 
+#ifdef BMP_ENABLE
 Adafruit_BMP280 bmp;
+#endif
 
 char commandBuffer[16 + 1];
 CommandHandler commandHandler(Serial, commandBuffer, sizeof(commandBuffer), handleCommand);
@@ -79,12 +98,14 @@ bool setupSensors(void)
         DebugPrintLine(F("Failed"));
         while(true);
     }
-
+    
+    #ifdef BMP_ENABLE
     bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
                     Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
                     Adafruit_BMP280::SAMPLING_X16,    /* Pressure oversampling */
                     Adafruit_BMP280::FILTER_X16,      /* Filtering. */
                     Adafruit_BMP280::STANDBY_MS_500); /* Standby time. */
+    #endif
 
     pinMode(A15, INPUT);
     return true;
@@ -100,6 +121,7 @@ void setup(void)
 
     DebugPrintLine("Initializing...");
 
+    #ifdef SD_ENABLE
     DebugPrintLine("SD card...");
     if(!sd.begin(CONFIG_CS_PIN))
     {
@@ -123,29 +145,38 @@ void setup(void)
             while(true);
         }
     }
+    #endif
 
+    #ifdef LORA_ENABLE
     DebugPrintLine("LoRa...");
     setupLoRa();
-
+    #endif
+    
+    #ifdef LIGHT_TRACKER_ENABLE
     DebugPrintLine("Light tracker...");
     lightTracker.Begin();
+    #endif
 
-    /*DebugPrintLine("Weather shield...");
+    #ifdef WEATHERSHIELD_ENABLE
+    DebugPrintLine("Weather shield...");
     if(!weatherShield.Begin())
     {
         DebugPrintLine("Failed");
         while(true);
-    }*/
+    }
+    #endif
 
     DebugPrintLine("Sensors...");
     setupSensors();
 
+    #ifdef RTC_ENABLE
     DebugPrintLine("RTC...");
     if(!rtc.begin())
     {
         DebugPrintLine("Failed");
         while(true);
     }
+    
 
     DateTime tmpTime = rtc.now();
     DebugPrint("Current time: ");
@@ -160,6 +191,7 @@ void setup(void)
         DebugPrintLine("Warning: RTC may have lost track of time");
         delay(2500UL);
     }
+    #endif
 
     DebugPrintLine("Waiting for setup command...");
     Serial.setTimeout(2500UL);
@@ -188,21 +220,29 @@ void loop(void)
     unsigned long now = millis();
     if((long)(now - nextUpdate) >= 0)
     {
+        #ifdef SD_ENABLE
         saveToFile();
+        #endif
         nextUpdate += sleepDuration;
     }
 
+    #ifdef LORA_ENABLE
     os_runloop_once();
+    #endif
 
+    #ifdef LIGHT_TRACKER_ENABLE
     if(lightTracker.Poll())
     {
         delay(20);
     }
     else
     {
-        //sleep.pwrDownMode(); //set sleep mode
-        //sleep.sleepDelay(sleepDuration); //sleep for: sleepDuration
+        #ifdef SLEEP_ENABLE
+        sleep.pwrDownMode(); //set sleep mode
+        sleep.sleepDelay(sleepDuration); //sleep for: sleepDuration
+        #endif
     }
+    #endif
 }
 
 #define TEST_READOFFSET     0U                                          // Position in the file to start reading (should be even divisible by size of 'collection_t').
