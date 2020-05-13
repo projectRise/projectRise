@@ -15,4 +15,5 @@
 Makefile        text eol=lf
 *.md            text eol=lf
 *.txt           text eol=lf
+*.ini           text eol=lf
 *.h.example     text eol=lf

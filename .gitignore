@@ -1,9 +1,9 @@
 # PlatformIO
 .pio/
-.travis.yml
 
 # Visual Studio
 .vs/
+x86/
 x64/
 Debug/
 Release/
