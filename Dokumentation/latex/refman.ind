@@ -1,0 +1,426 @@
+\begin{theindex}
+
+  \item {\_\_attribute\_\_}
+    \subitem {types.h}, 32
+
+  \indexspace
+
+  \item {ANALOG\_MAX}
+    \subitem {projectRise.cpp}, 35
+  \item {APPLY\_CONFIG}
+    \subitem {config.h}, 25
+  \item {ARRCNT}
+    \subitem {projectRise.cpp}, 35
+
+  \indexspace
+
+  \item {back-\/end/config.h}, 25
+  \item {back-\/end/README.md}, 26
+  \item {Begin}
+    \subitem {LightTracker}, 21
+    \subitem {WeatherShield}, 22
+  \item {bmp}
+    \subitem {projectRise.cpp}, 39
+  \item {BMP\_ENABLE}
+    \subitem {projectRise.cpp}, 35
+
+  \indexspace
+
+  \item {CMD\_ABORT}
+    \subitem {config\_device}, 16
+    \subitem {misc.hpp}, 30
+  \item {CMD\_DT}
+    \subitem {config\_device}, 16
+    \subitem {misc.hpp}, 30
+  \item {CMD\_FAIL}
+    \subitem {config\_device}, 16
+    \subitem {misc.hpp}, 31
+  \item {CMD\_INIT}
+    \subitem {config\_device}, 16
+    \subitem {misc.hpp}, 31
+  \item {CMD\_OK}
+    \subitem {config\_device}, 16
+    \subitem {misc.hpp}, 31
+  \item {CMD\_SD}
+    \subitem {misc.hpp}, 31
+  \item {CMD\_UNKNOWN}
+    \subitem {config\_device}, 17
+    \subitem {misc.hpp}, 31
+  \item {cmdhndlr\_t}
+    \subitem {CommandHandler.hpp}, 28
+  \item {collection\_t}
+    \subitem {types.h}, 32
+  \item {commandBuffer}
+    \subitem {projectRise.cpp}, 39
+  \item {CommandHandler}, 19
+    \subitem {CommandHandler}, 19
+    \subitem {Flush}, 19
+    \subitem {Receive}, 20
+    \subitem {Send}, 20
+    \subitem {SendLine}, 20
+  \item {commandHandler}
+    \subitem {projectRise.cpp}, 39
+  \item {CommandHandler.hpp}
+    \subitem {cmdhndlr\_t}, 28
+  \item {config.h}, 25
+    \subitem {APPLY\_CONFIG}, 25
+    \subitem {CONFIG\_ASKEY}, 26
+    \subitem {CONFIG\_CHANNEL}, 26
+    \subitem {CONFIG\_DEVADDR}, 26
+    \subitem {CONFIG\_NETID}, 26
+    \subitem {CONFIG\_NSKEY}, 26
+    \subitem {key}, 25
+  \item {CONFIG\_ASKEY}
+    \subitem {config.h}, 26
+  \item {CONFIG\_CHANNEL}
+    \subitem {config.h}, 26
+  \item {CONFIG\_CS\_PIN}
+    \subitem {projectRise.cpp}, 35
+  \item {CONFIG\_DEVADDR}
+    \subitem {config.h}, 26
+  \item {config\_device}, 15
+    \subitem {CMD\_ABORT}, 16
+    \subitem {CMD\_DT}, 16
+    \subitem {CMD\_FAIL}, 16
+    \subitem {CMD\_INIT}, 16
+    \subitem {CMD\_OK}, 16
+    \subitem {CMD\_UNKNOWN}, 17
+    \subitem {default}, 17
+    \subitem {dest}, 17
+    \subitem {False}, 17
+    \subitem {float}, 17
+    \subitem {help}, 17
+    \subitem {int}, 17
+    \subitem {main}, 15
+    \subitem {metavar}, 17
+    \subitem {options}, 18
+    \subitem {receiveResponse}, 16
+    \subitem {required}, 18
+    \subitem {sendCommand}, 16
+    \subitem {str}, 18
+    \subitem {type}, 18
+  \item {config\_device.py}, 26
+  \item {CONFIG\_INTERVAL}
+    \subitem {lora.cpp}, 42
+  \item {CONFIG\_MISO\_PIN}
+    \subitem {projectRise.cpp}, 36
+  \item {CONFIG\_MOSI\_PIN}
+    \subitem {projectRise.cpp}, 36
+  \item {CONFIG\_NETID}
+    \subitem {config.h}, 26
+  \item {CONFIG\_NSKEY}
+    \subitem {config.h}, 26
+  \item {CONFIG\_SCK\_PIN}
+    \subitem {projectRise.cpp}, 36
+  \item {counter}
+    \subitem {projectRise.cpp}, 40
+
+  \indexspace
+
+  \item {debug.hpp}
+    \subitem {DebugFlush}, 28
+    \subitem {DebugPrint}, 28
+    \subitem {DebugPrintLine}, 29
+    \subitem {DebugWrite}, 29
+    \subitem {NOP}, 29
+  \item {DebugFlush}
+    \subitem {debug.hpp}, 28
+  \item {DebugPrint}
+    \subitem {debug.hpp}, 28
+  \item {DebugPrintLine}
+    \subitem {debug.hpp}, 29
+  \item {DebugWrite}
+    \subitem {debug.hpp}, 29
+  \item {default}
+    \subitem {config\_device}, 17
+  \item {dest}
+    \subitem {config\_device}, 17
+  \item {documentation.md}, 27
+
+  \indexspace
+
+  \item {False}
+    \subitem {config\_device}, 17
+  \item {float}
+    \subitem {config\_device}, 17
+  \item {Flush}
+    \subitem {CommandHandler}, 19
+  \item {front-\/end/README.md}, 26
+
+  \indexspace
+
+  \item {GetBatteryLevel}
+    \subitem {WeatherShield}, 22
+  \item {GetHorizontalPosition}
+    \subitem {LightTracker}, 21
+  \item {GetHumidity}
+    \subitem {WeatherShield}, 23
+  \item {GetLightLevel}
+    \subitem {WeatherShield}, 23
+  \item {GetPressure}
+    \subitem {WeatherShield}, 23
+  \item {getSensorValues}
+    \subitem {projectRise.cpp}, 38
+  \item {GetTemperature}
+    \subitem {WeatherShield}, 23
+  \item {GetVerticalPosition}
+    \subitem {LightTracker}, 21
+
+  \indexspace
+
+  \item {handleCommand}
+    \subitem {misc.cpp}, 44
+    \subitem {misc.hpp}, 31
+  \item {header\_t}
+    \subitem {types.h}, 33
+  \item {help}
+    \subitem {config\_device}, 17
+
+  \indexspace
+
+  \item {inc/CommandHandler.hpp}, 27
+  \item {inc/debug.hpp}, 28
+  \item {inc/LightTracker.hpp}, 29
+  \item {inc/lora.hpp}, 30
+  \item {inc/misc.hpp}, 30
+  \item {inc/types.h}, 32
+  \item {inc/WeatherShield.hpp}, 33
+  \item {int}
+    \subitem {config\_device}, 17
+
+  \indexspace
+
+  \item {key}
+    \subitem {config.h}, 25
+
+  \indexspace
+
+  \item {LIGHT\_TRACKER\_ENABLE}
+    \subitem {projectRise.cpp}, 36
+  \item {LightTracker}, 20
+    \subitem {Begin}, 21
+    \subitem {GetHorizontalPosition}, 21
+    \subitem {GetVerticalPosition}, 21
+    \subitem {LightTracker}, 21
+    \subitem {Poll}, 21
+  \item {lightTracker}
+    \subitem {projectRise.cpp}, 40
+  \item {LightTracker.cpp}
+    \subitem {SERVO\_ANGLE\_MAX}, 41
+    \subitem {SERVO\_ANGLE\_MIN}, 41
+  \item {lmic\_pins}
+    \subitem {lora.cpp}, 43
+  \item {LOGDIR}
+    \subitem {projectRise.cpp}, 36
+  \item {LOGFILE\_BINARY}
+    \subitem {projectRise.cpp}, 36
+  \item {LOGFILE\_TEXT}
+    \subitem {projectRise.cpp}, 36
+  \item {loop}
+    \subitem {projectRise.cpp}, 38
+  \item {lora.cpp}
+    \subitem {CONFIG\_INTERVAL}, 42
+    \subitem {lmic\_pins}, 43
+    \subitem {measurementBuffer}, 43
+    \subitem {onEvent}, 42
+    \subitem {os\_getArtEui}, 42
+    \subitem {os\_getDevEui}, 42
+    \subitem {os\_getDevKey}, 42
+    \subitem {setupLoRa}, 43
+  \item {lora.hpp}
+    \subitem {setupLoRa}, 30
+
+  \indexspace
+
+  \item {main}
+    \subitem {config\_device}, 15
+  \item {measurementBuffer}
+    \subitem {lora.cpp}, 43
+    \subitem {projectRise.cpp}, 40
+  \item {metavar}
+    \subitem {config\_device}, 17
+  \item {misc.cpp}
+    \subitem {handleCommand}, 44
+    \subitem {rtc}, 44
+    \subitem {sleepDuration}, 44
+  \item {misc.hpp}
+    \subitem {CMD\_ABORT}, 30
+    \subitem {CMD\_DT}, 30
+    \subitem {CMD\_FAIL}, 31
+    \subitem {CMD\_INIT}, 31
+    \subitem {CMD\_OK}, 31
+    \subitem {CMD\_SD}, 31
+    \subitem {CMD\_UNKNOWN}, 31
+    \subitem {handleCommand}, 31
+
+  \indexspace
+
+  \item {nextUpdate}
+    \subitem {projectRise.cpp}, 40
+  \item {NOP}
+    \subitem {debug.hpp}, 29
+
+  \indexspace
+
+  \item {onEvent}
+    \subitem {lora.cpp}, 42
+  \item {options}
+    \subitem {config\_device}, 18
+  \item {os\_getArtEui}
+    \subitem {lora.cpp}, 42
+  \item {os\_getDevEui}
+    \subitem {lora.cpp}, 42
+  \item {os\_getDevKey}
+    \subitem {lora.cpp}, 42
+
+  \indexspace
+
+  \item {Poll}
+    \subitem {LightTracker}, 21
+  \item {printSensorValues}
+    \subitem {projectRise.cpp}, 38
+  \item {projectRise.cpp}, 34
+    \subitem {ANALOG\_MAX}, 35
+    \subitem {ARRCNT}, 35
+    \subitem {bmp}, 39
+    \subitem {BMP\_ENABLE}, 35
+    \subitem {commandBuffer}, 39
+    \subitem {commandHandler}, 39
+    \subitem {CONFIG\_CS\_PIN}, 35
+    \subitem {CONFIG\_MISO\_PIN}, 36
+    \subitem {CONFIG\_MOSI\_PIN}, 36
+    \subitem {CONFIG\_SCK\_PIN}, 36
+    \subitem {counter}, 40
+    \subitem {getSensorValues}, 38
+    \subitem {LIGHT\_TRACKER\_ENABLE}, 36
+    \subitem {lightTracker}, 40
+    \subitem {LOGDIR}, 36
+    \subitem {LOGFILE\_BINARY}, 36
+    \subitem {LOGFILE\_TEXT}, 36
+    \subitem {loop}, 38
+    \subitem {measurementBuffer}, 40
+    \subitem {nextUpdate}, 40
+    \subitem {printSensorValues}, 38
+    \subitem {readBinaryFile}, 38
+    \subitem {rtc}, 40
+    \subitem {RTC\_ENABLE}, 36
+    \subitem {saveToFile}, 38
+    \subitem {sd}, 40
+    \subitem {SD\_ENABLE}, 37
+    \subitem {setup}, 38
+    \subitem {setupSensors}, 38
+    \subitem {sleepDuration}, 40
+    \subitem {STRLEN}, 37
+    \subitem {TEST\_ELEMENTCOUNT}, 37
+    \subitem {TEST\_READCOUNT}, 37
+    \subitem {TEST\_READOFFSET}, 37
+    \subitem {TEST\_TOTALCOUNT}, 37
+    \subitem {testReadFromFile}, 39
+    \subitem {USE\_SDIO}, 37
+    \subitem {writeBinaryFile}, 39
+    \subitem {writeTextFile}, 39
+
+  \indexspace
+
+  \item {readBinaryFile}
+    \subitem {projectRise.cpp}, 38
+  \item {README.md}, 26
+  \item {Receive}
+    \subitem {CommandHandler}, 20
+  \item {receiveResponse}
+    \subitem {config\_device}, 16
+  \item {required}
+    \subitem {config\_device}, 18
+  \item {rtc}
+    \subitem {misc.cpp}, 44
+    \subitem {projectRise.cpp}, 40
+  \item {RTC\_ENABLE}
+    \subitem {projectRise.cpp}, 36
+
+  \indexspace
+
+  \item {saveToFile}
+    \subitem {projectRise.cpp}, 38
+  \item {sd}
+    \subitem {projectRise.cpp}, 40
+  \item {SD\_ENABLE}
+    \subitem {projectRise.cpp}, 37
+  \item {Send}
+    \subitem {CommandHandler}, 20
+  \item {sendCommand}
+    \subitem {config\_device}, 16
+  \item {SendLine}
+    \subitem {CommandHandler}, 20
+  \item {sensordata2\_t}
+    \subitem {types.h}, 33
+  \item {sensordata\_t}
+    \subitem {types.h}, 33
+  \item {SERVO\_ANGLE\_MAX}
+    \subitem {LightTracker.cpp}, 41
+  \item {SERVO\_ANGLE\_MIN}
+    \subitem {LightTracker.cpp}, 41
+  \item {setup}
+    \subitem {projectRise.cpp}, 38
+  \item {setupLoRa}
+    \subitem {lora.cpp}, 43
+    \subitem {lora.hpp}, 30
+  \item {setupSensors}
+    \subitem {projectRise.cpp}, 38
+  \item {single\_t}
+    \subitem {types.h}, 32
+  \item {sleepDuration}
+    \subitem {misc.cpp}, 44
+    \subitem {projectRise.cpp}, 40
+  \item {src/CommandHandler.cpp}, 41
+  \item {src/LightTracker.cpp}, 41
+  \item {src/lora.cpp}, 41
+  \item {src/misc.cpp}, 43
+  \item {src/WeatherShield.cpp}, 44
+  \item {str}
+    \subitem {config\_device}, 18
+  \item {STRLEN}
+    \subitem {projectRise.cpp}, 37
+
+  \indexspace
+
+  \item {TEST\_ELEMENTCOUNT}
+    \subitem {projectRise.cpp}, 37
+  \item {TEST\_READCOUNT}
+    \subitem {projectRise.cpp}, 37
+  \item {TEST\_READOFFSET}
+    \subitem {projectRise.cpp}, 37
+  \item {TEST\_TOTALCOUNT}
+    \subitem {projectRise.cpp}, 37
+  \item {testReadFromFile}
+    \subitem {projectRise.cpp}, 39
+  \item {type}
+    \subitem {config\_device}, 18
+  \item {types.h}
+    \subitem {\_\_attribute\_\_}, 32
+    \subitem {collection\_t}, 32
+    \subitem {header\_t}, 33
+    \subitem {sensordata2\_t}, 33
+    \subitem {sensordata\_t}, 33
+    \subitem {single\_t}, 32
+
+  \indexspace
+
+  \item {USE\_SDIO}
+    \subitem {projectRise.cpp}, 37
+
+  \indexspace
+
+  \item {WeatherShield}, 22
+    \subitem {Begin}, 22
+    \subitem {GetBatteryLevel}, 22
+    \subitem {GetHumidity}, 23
+    \subitem {GetLightLevel}, 23
+    \subitem {GetPressure}, 23
+    \subitem {GetTemperature}, 23
+    \subitem {WeatherShield}, 22
+  \item {writeBinaryFile}
+    \subitem {projectRise.cpp}, 39
+  \item {writeTextFile}
+    \subitem {projectRise.cpp}, 39
+
+\end{theindex}

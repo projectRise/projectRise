@@ -1,0 +1,57 @@
+.TH "WeatherShield" 3 "Thu May 14 2020" "My Project" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+WeatherShield
+.SH SYNOPSIS
+.br
+.PP
+.PP
+\fC#include <WeatherShield\&.hpp>\fP
+.SS "Public Member Functions"
+
+.in +1c
+.ti -1c
+.RI "float \fBGetTemperature\fP (void)"
+.br
+.ti -1c
+.RI "float \fBGetHumidity\fP (void)"
+.br
+.ti -1c
+.RI "float \fBGetPressure\fP (void)"
+.br
+.ti -1c
+.RI "float \fBGetLightLevel\fP (void) const"
+.br
+.ti -1c
+.RI "float \fBGetBatteryLevel\fP (void) const"
+.br
+.ti -1c
+.RI "bool \fBBegin\fP (void)"
+.br
+.ti -1c
+.RI "\fBWeatherShield\fP (uint8_t vrefPin, uint8_t lightSensorPin, uint8_t batterySensorPin, float vrefVoltage=3\&.3f)"
+.br
+.in -1c
+.SH "Constructor & Destructor Documentation"
+.PP 
+.SS "WeatherShield::WeatherShield (uint8_t vrefPin, uint8_t lightSensorPin, uint8_t batterySensorPin, float vrefVoltage = \fC3\&.3f\fP)"
+
+.SH "Member Function Documentation"
+.PP 
+.SS "bool WeatherShield::Begin (void)"
+
+.SS "float WeatherShield::GetBatteryLevel (void) const"
+
+.SS "float WeatherShield::GetHumidity (void)"
+
+.SS "float WeatherShield::GetLightLevel (void) const"
+
+.SS "float WeatherShield::GetPressure (void)"
+
+.SS "float WeatherShield::GetTemperature (void)"
+
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for My Project from the source code\&.

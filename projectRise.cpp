@@ -22,9 +22,10 @@
 #include "misc.hpp"
 #include "debug.hpp"
 #include "sdios.h"
+#include "Sunrise.h"
 
 #include <Wire.h>
-//#include <SPI.h>
+#include <SPI.h>
 #include <Adafruit_BMP280.h>
 
 #define USE_SDIO 0
@@ -38,10 +39,16 @@
 #define SD_ENABLE
 //#define LORA_ENABLE
 //#define WEATHERSHIELD_ENABLE
-#define LIGHT_TRACKER_ENABLE
+//#define LIGHT_TRACKER_ENABLE
 #define RTC_ENABLE
-#define BMP_ENABLE
+//#define BMP_ENABLE
 //#define SLEEP_ENABLE
+
+#define PIN_EN                  2
+#define PIN_NRDY                3
+
+#define MS_PER_H                ((60UL * 60UL) * 1000UL)
+#define MEASUREMENT_INTERVAL    (5UL * 1000UL)
 
 #ifdef SD_ENABLE
 #define CONFIG_MISO_PIN 24
@@ -70,6 +77,11 @@ LightTracker lightTracker(44, 45, A8, A9, A10, A11, 0.25 * ANALOG_MAX, 0.05 * AN
 Adafruit_BMP280 bmp;
 #endif
 
+Sunrise sunrise;
+uint16_t hourCount = 0U;
+unsigned long int nextHour;
+unsigned long int nextMeasurement;
+
 char commandBuffer[16 + 1];
 CommandHandler commandHandler(Serial, commandBuffer, sizeof(commandBuffer), handleCommand);
 
@@ -87,11 +99,18 @@ bool writeTextFile(const char* const filepath, const collection_t & content);
 bool writeBinaryFile(const char* const filepath, const collection_t& content);
 bool readBinaryFile(const char* const filepath, collection_t* const result, size_t* const resultCount, const size_t count, const size_t index = 0U);
 void printSensorValues(const collection_t& content);
+void switchMode(measurementmode_t mode);
+void delayUntil(unsigned long int time);
+bool awaitISR(unsigned long int timeout = 2000UL);
+void nrdyISR(void);
 
 void testReadFromFile(void);
 
+volatile uint8_t isReady = false;
+
+#ifdef BMP_ENABLE
 bool setupSensors(void)
-{
+{  
     DebugPrintLine("BMP280...");
     if(!bmp.begin())
     {
@@ -99,27 +118,61 @@ bool setupSensors(void)
         while(true);
     }
     
-    #ifdef BMP_ENABLE
+    
     bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
                     Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
                     Adafruit_BMP280::SAMPLING_X16,    /* Pressure oversampling */
                     Adafruit_BMP280::FILTER_X16,      /* Filtering. */
                     Adafruit_BMP280::STANDBY_MS_500); /* Standby time. */
-    #endif
+    
 
     pinMode(A15, INPUT);
-    return true;
+    return true;  
 }
+#endif
 
 void setup(void)
 {
-    //delay(2500);
+    delay(2500UL);
     Serial.begin(9600);
 
     //Leds that show status on board
     while(!Serial);
 
     DebugPrintLine("Initializing...");
+    pinMode(PIN_NRDY, INPUT);
+    attachInterrupt(digitalPinToInterrupt(PIN_NRDY), nrdyISR, FALLING);
+
+    // Initial device setup. Also retrieves initial measurement state.
+    if(!sunrise.Begin(PIN_EN, true))
+    {
+        DebugPrintLine("Error: Could not initialize the device");
+        while(true);
+    }
+
+    sunrise.Awake();
+    switchMode(measurementmode_t::MM_SINGLE);
+
+    metercontrol_t mc;
+    if(!sunrise.GetMeterControlEE(mc))
+    {
+        DebugPrintLine("*** ERROR: Could not get meter control");
+        while(true);
+    }
+
+    if(!mc.nrdy)
+    {
+        DebugPrintLine("*** ERROR: NRDY option should be enabled");
+        while(true);
+    }
+
+    sunrise.Sleep();
+    DebugPrintLine("Done");
+    DebugPrintLine();
+    Serial.flush();
+
+    nextHour = millis() + MS_PER_H;
+    nextMeasurement = millis();
 
     #ifdef SD_ENABLE
     DebugPrintLine("SD card...");
@@ -165,10 +218,12 @@ void setup(void)
         while(true);
     }
     #endif
-
+    
+    #ifdef BMP_ENABLE
     DebugPrintLine("Sensors...");
     setupSensors();
-
+    #endif
+    
     #ifdef RTC_ENABLE
     DebugPrintLine("RTC...");
     if(!rtc.begin())
@@ -216,6 +271,64 @@ void setup(void)
 
 void loop(void)
 {
+    // Wake up the sensor.
+    sunrise.Awake();
+    Serial.println("Measuring...");
+
+    // Count hours (taking time rollover in consideration).
+    if((long)(millis() - nextHour) >= 0L)
+    {
+        hourCount++;
+        nextHour += MS_PER_H;
+    }
+
+    // Single measurement mode requires host device to increment ABC time.
+    uint16_t tmpHourCount = sunrise.GetABCTime();
+    if(hourCount != tmpHourCount)
+    {
+        sunrise.SetABCTime(hourCount);
+        Serial.print("Setting ABC time:  "); Serial.println(hourCount);
+    }
+
+    // Reset ISR variable and start new measurement.
+    isReady = false;
+    if(sunrise.StartSingleMeasurement())
+    {
+        // Wait for the sensor to complate the measurement and signal the ISR (or timeout).
+        unsigned long int measurementStartTime = millis();
+        if(awaitISR())
+        {
+            unsigned long int measurementDuration = millis() - measurementStartTime;
+            Serial.print("Duration:          "); Serial.println(measurementDuration);
+
+            // Read and print measurement values.
+            if(sunrise.ReadMeasurement())
+            {
+                Serial.print("Error status:      "); Serial.println(sunrise.GetErrorStatusRaw(), BIN);
+                Serial.print("CO2:               "); Serial.println(sunrise.GetCO2());
+                Serial.print("Temperature:       "); Serial.println(sunrise.GetTemperature());
+            }
+            else
+            {
+                Serial.println("*** ERROR: Could not read measurement");
+            }
+        }
+        else
+        {
+            Serial.println("*** ERROR: ISR timeout");
+        }
+    }
+    else
+    {
+        Serial.println("*** ERROR: Could not start single measurement");
+    }
+    Serial.println();
+
+    // Put the sensor into sleep mode and wait for the next measurement.
+    sunrise.Sleep();
+    nextMeasurement += MEASUREMENT_INTERVAL;
+    delayUntil(nextMeasurement);
+    
     unsigned long now = millis();
     if((long)(now - nextUpdate) >= 0)
     {
@@ -269,6 +382,7 @@ void testReadFromFile(void)
     }
 }
 
+#ifdef BMP_ENABLE
 bool getSensorValues(collection_t& result)
 {
     Adafruit_Sensor* bmpTemp = bmp.getTemperatureSensor();
@@ -289,6 +403,7 @@ bool getSensorValues(collection_t& result)
 
     return true;
 }
+#endif
 
 bool writeTextFile(const char* const filepath, const collection_t& content)
 {
@@ -430,4 +545,52 @@ void saveToFile(void)
     printSensorValues(measurementBuffer);
 
     counter++;
+}
+
+void nrdyISR(void)
+{
+    isReady = true;
+}
+
+bool awaitISR(unsigned long int timeout = 2000UL)
+{
+    timeout += millis();
+    while(!isReady && (long)(millis() - timeout) < 0L);
+    return isReady;
+}
+
+void delayUntil(unsigned long int time)
+{
+    while((long)(millis() - time) < 0L);
+}
+
+void switchMode(measurementmode_t mode)
+{
+    while(true)
+    {
+        measurementmode_t measurementMode;
+        if(!sunrise.GetMeasurementModeEE(measurementMode))
+        {
+            Serial.println("*** ERROR: Could not get measurement mode");
+            while(true);
+        }
+
+        if(measurementMode == mode)
+        {
+            break;
+        }
+
+        Serial.println("Attempting to switch measurement mode...");
+        if(!sunrise.SetMeasurementModeEE(mode))
+        {
+            Serial.println("*** ERROR: Could not set measurement mode");
+            while(true);
+        }
+
+        if(!sunrise.HardRestart())
+        {
+            Serial.println("*** ERROR: Failed to restart the device");
+            while(true);
+        }
+    }
 }

@@ -1,0 +1,92 @@
+.TH "src/lora.cpp" 3 "Thu May 14 2020" "My Project" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+src/lora.cpp
+.SH SYNOPSIS
+.br
+.PP
+\fC#include 'lora\&.hpp'\fP
+.br
+\fC#include <lmic\&.h>\fP
+.br
+\fC#include <hal/hal\&.h>\fP
+.br
+\fC#include 'types\&.h'\fP
+.br
+\fC#include 'debug\&.hpp'\fP
+.br
+\fC#include 'config\&.h'\fP
+.br
+
+.SS "Macros"
+
+.in +1c
+.ti -1c
+.RI "#define \fBCONFIG_INTERVAL\fP   60UL"
+.br
+.in -1c
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "void \fBos_getArtEui\fP (u1_t *buf)"
+.br
+.ti -1c
+.RI "void \fBos_getDevEui\fP (u1_t *buf)"
+.br
+.ti -1c
+.RI "void \fBos_getDevKey\fP (u1_t *buf)"
+.br
+.ti -1c
+.RI "void \fBonEvent\fP (ev_t ev)"
+.br
+.ti -1c
+.RI "void \fBsetupLoRa\fP (void)"
+.br
+.in -1c
+.SS "Variables"
+
+.in +1c
+.ti -1c
+.RI "const lmic_pinmap \fBlmic_pins\fP"
+.br
+.ti -1c
+.RI "\fBcollection_t\fP \fBmeasurementBuffer\fP"
+.br
+.in -1c
+.SH "Macro Definition Documentation"
+.PP 
+.SS "#define CONFIG_INTERVAL   60UL"
+
+.SH "Function Documentation"
+.PP 
+.SS "void onEvent (ev_t ev)"
+
+.SS "void os_getArtEui (u1_t * buf)"
+
+.SS "void os_getDevEui (u1_t * buf)"
+
+.SS "void os_getDevKey (u1_t * buf)"
+
+.SS "void setupLoRa (void)"
+
+.SH "Variable Documentation"
+.PP 
+.SS "const lmic_pinmap lmic_pins"
+\fBInitial value:\fP
+.PP
+.nf
+=
+{
+    \&.nss = 10,
+    \&.rxtx = LMIC_UNUSED_PIN,
+    \&.rst = 9,
+    \&.dio = { 2, 6, 7 }
+}
+.fi
+.SS "\fBcollection_t\fP measurementBuffer"
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for My Project from the source code\&.

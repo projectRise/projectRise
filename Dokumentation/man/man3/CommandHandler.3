@@ -1,0 +1,47 @@
+.TH "CommandHandler" 3 "Thu May 14 2020" "My Project" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+CommandHandler
+.SH SYNOPSIS
+.br
+.PP
+.PP
+\fC#include <CommandHandler\&.hpp>\fP
+.SS "Public Member Functions"
+
+.in +1c
+.ti -1c
+.RI "bool \fBReceive\fP (void)"
+.br
+.ti -1c
+.RI "template<class T > size_t \fBSend\fP (const T &msg)"
+.br
+.ti -1c
+.RI "template<class T > size_t \fBSendLine\fP (const T &msg)"
+.br
+.ti -1c
+.RI "void \fBFlush\fP (void)"
+.br
+.ti -1c
+.RI "\fBCommandHandler\fP (Stream &source, char *buffer, size_t size, \fBcmdhndlr_t\fP callback)"
+.br
+.in -1c
+.SH "Constructor & Destructor Documentation"
+.PP 
+.SS "CommandHandler::CommandHandler (Stream & source, char * buffer, size_t size, \fBcmdhndlr_t\fP callback)"
+
+.SH "Member Function Documentation"
+.PP 
+.SS "void CommandHandler::Flush (void)\fC [inline]\fP"
+
+.SS "bool CommandHandler::Receive (void)"
+
+.SS "template<class T > size_t CommandHandler::Send (const T & msg)\fC [inline]\fP"
+
+.SS "template<class T > size_t CommandHandler::SendLine (const T & msg)\fC [inline]\fP"
+
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for My Project from the source code\&.

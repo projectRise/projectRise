@@ -1,0 +1,360 @@
+\doxysection{project\+Rise.\+cpp File Reference}
+\label{project_rise_8cpp}\index{projectRise.cpp@{projectRise.cpp}}
+{\ttfamily \#include $<$stdint.\+h$>$}\newline
+{\ttfamily \#include $<$S\+P\+I.\+h$>$}\newline
+{\ttfamily \#include $<$Sd\+Fat.\+h$>$}\newline
+{\ttfamily \#include $<$R\+T\+Clib.\+h$>$}\newline
+{\ttfamily \#include $<$Sleep\+\_\+n0m1.\+h$>$}\newline
+{\ttfamily \#include $<$lmic.\+h$>$}\newline
+{\ttfamily \#include $<$hal/hal.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}types.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}lora.\+hpp\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Weather\+Shield.\+hpp\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Light\+Tracker.\+hpp\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Command\+Handler.\+hpp\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}misc.\+hpp\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}debug.\+hpp\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}sdios.\+h\char`\"{}}\newline
+{\ttfamily \#include $<$Wire.\+h$>$}\newline
+{\ttfamily \#include $<$Adafruit\+\_\+\+B\+M\+P280.\+h$>$}\newline
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \textbf{ U\+S\+E\+\_\+\+S\+D\+IO}~0
+\item 
+\#define \textbf{ A\+R\+R\+C\+NT}(x)~(sizeof((x)) / sizeof($\ast$(x)))
+\item 
+\#define \textbf{ S\+T\+R\+L\+EN}(x)~(\textbf{ A\+R\+R\+C\+NT}((x)) -\/ 1U)
+\item 
+\#define \textbf{ A\+N\+A\+L\+O\+G\+\_\+\+M\+AX}~((1 $<$$<$ 10) -\/ 1)
+\item 
+\#define \textbf{ S\+D\+\_\+\+E\+N\+A\+B\+LE}
+\item 
+\#define \textbf{ L\+I\+G\+H\+T\+\_\+\+T\+R\+A\+C\+K\+E\+R\+\_\+\+E\+N\+A\+B\+LE}
+\item 
+\#define \textbf{ R\+T\+C\+\_\+\+E\+N\+A\+B\+LE}
+\item 
+\#define \textbf{ B\+M\+P\+\_\+\+E\+N\+A\+B\+LE}
+\item 
+\#define \textbf{ C\+O\+N\+F\+I\+G\+\_\+\+M\+I\+S\+O\+\_\+\+P\+IN}~24
+\item 
+\#define \textbf{ C\+O\+N\+F\+I\+G\+\_\+\+M\+O\+S\+I\+\_\+\+P\+IN}~23
+\item 
+\#define \textbf{ C\+O\+N\+F\+I\+G\+\_\+\+S\+C\+K\+\_\+\+P\+IN}~25
+\item 
+\#define \textbf{ C\+O\+N\+F\+I\+G\+\_\+\+C\+S\+\_\+\+P\+IN}~22
+\item 
+\#define \textbf{ L\+O\+G\+D\+IR}~\char`\"{}weather\char`\"{}
+\item 
+\#define \textbf{ L\+O\+G\+F\+I\+L\+E\+\_\+\+T\+E\+XT}~\char`\"{}data.\+log\char`\"{}
+\item 
+\#define \textbf{ L\+O\+G\+F\+I\+L\+E\+\_\+\+B\+I\+N\+A\+RY}~\char`\"{}data.\+dat\char`\"{}
+\item 
+\#define \textbf{ T\+E\+S\+T\+\_\+\+R\+E\+A\+D\+O\+F\+F\+S\+ET}~0U
+\item 
+\#define \textbf{ T\+E\+S\+T\+\_\+\+E\+L\+E\+M\+E\+N\+T\+C\+O\+U\+NT}~2U
+\item 
+\#define \textbf{ T\+E\+S\+T\+\_\+\+R\+E\+A\+D\+C\+O\+U\+NT}~5U
+\item 
+\#define \textbf{ T\+E\+S\+T\+\_\+\+T\+O\+T\+A\+L\+C\+O\+U\+NT}~((\textbf{ T\+E\+S\+T\+\_\+\+E\+L\+E\+M\+E\+N\+T\+C\+O\+U\+NT}) $\ast$ (\textbf{ T\+E\+S\+T\+\_\+\+R\+E\+A\+D\+C\+O\+U\+NT}))
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+bool \textbf{ get\+Sensor\+Values} (\textbf{ collection\+\_\+t} \&result)
+\item 
+void \textbf{ save\+To\+File} (void)
+\item 
+bool \textbf{ write\+Text\+File} (const char $\ast$const filepath, const \textbf{ collection\+\_\+t} \&content)
+\item 
+bool \textbf{ write\+Binary\+File} (const char $\ast$const filepath, const \textbf{ collection\+\_\+t} \&content)
+\item 
+bool \textbf{ read\+Binary\+File} (const char $\ast$const filepath, \textbf{ collection\+\_\+t} $\ast$const result, size\+\_\+t $\ast$const result\+Count, const size\+\_\+t count, const size\+\_\+t index=0U)
+\item 
+void \textbf{ print\+Sensor\+Values} (const \textbf{ collection\+\_\+t} \&content)
+\item 
+void \textbf{ test\+Read\+From\+File} (void)
+\item 
+bool \textbf{ setup\+Sensors} (void)
+\item 
+void \textbf{ setup} (void)
+\item 
+void \textbf{ loop} (void)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+Sd\+Fat\+Soft\+Spi$<$ \textbf{ C\+O\+N\+F\+I\+G\+\_\+\+M\+I\+S\+O\+\_\+\+P\+IN}, \textbf{ C\+O\+N\+F\+I\+G\+\_\+\+M\+O\+S\+I\+\_\+\+P\+IN}, \textbf{ C\+O\+N\+F\+I\+G\+\_\+\+S\+C\+K\+\_\+\+P\+IN} $>$ \textbf{ sd}
+\item 
+unsigned long \textbf{ sleep\+Duration} = 60\+UL $\ast$ 1000\+UL
+\item 
+R\+T\+C\+\_\+\+D\+S3231 \textbf{ rtc}
+\item 
+\textbf{ Light\+Tracker} \textbf{ light\+Tracker} (44, 45, A8, A9, A10, A11, 0.\+25 $\ast$\textbf{ A\+N\+A\+L\+O\+G\+\_\+\+M\+AX}, 0.\+05 $\ast$\textbf{ A\+N\+A\+L\+O\+G\+\_\+\+M\+AX})
+\item 
+Adafruit\+\_\+\+B\+M\+P280 \textbf{ bmp}
+\item 
+char \textbf{ command\+Buffer} [16+1]
+\item 
+\textbf{ Command\+Handler} \textbf{ command\+Handler} (Serial, \textbf{ command\+Buffer}, sizeof(\textbf{ command\+Buffer}), \textbf{ handle\+Command})
+\item 
+unsigned long \textbf{ next\+Update} = 0\+UL
+\item 
+unsigned int \textbf{ counter} = 0U
+\item 
+\textbf{ collection\+\_\+t} \textbf{ measurement\+Buffer}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\doxyref{project\+Rise.\+cpp}{p.}{project_rise_8cpp} Main code of the energy harvesting/weather station project
+
+\begin{DoxyAuthor}{Authors}
+albrdev ({\texttt{ albrdev@gmail.\+com}}), Ziiny ({\texttt{ sebastian.\+cobert@gmail.\+com}}) 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+2020-\/02-\/06 
+\end{DoxyDate}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\label{project_rise_8cpp_a0cc981b1d4157633a0651447d48c3b16}} 
+\index{projectRise.cpp@{projectRise.cpp}!ANALOG\_MAX@{ANALOG\_MAX}}
+\index{ANALOG\_MAX@{ANALOG\_MAX}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{ANALOG\_MAX}
+{\footnotesize\ttfamily \#define A\+N\+A\+L\+O\+G\+\_\+\+M\+AX~((1 $<$$<$ 10) -\/ 1)}
+
+\mbox{\label{project_rise_8cpp_a6fb985a0337791275187450400ae7186}} 
+\index{projectRise.cpp@{projectRise.cpp}!ARRCNT@{ARRCNT}}
+\index{ARRCNT@{ARRCNT}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{ARRCNT}
+{\footnotesize\ttfamily \#define A\+R\+R\+C\+NT(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~(sizeof((x)) / sizeof($\ast$(x)))}
+
+\mbox{\label{project_rise_8cpp_ae1cf93ee2b4a5678d41f6661f0000905}} 
+\index{projectRise.cpp@{projectRise.cpp}!BMP\_ENABLE@{BMP\_ENABLE}}
+\index{BMP\_ENABLE@{BMP\_ENABLE}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{BMP\_ENABLE}
+{\footnotesize\ttfamily \#define B\+M\+P\+\_\+\+E\+N\+A\+B\+LE}
+
+\mbox{\label{project_rise_8cpp_a9084322b238cc5dca424b2fd71b7cb99}} 
+\index{projectRise.cpp@{projectRise.cpp}!CONFIG\_CS\_PIN@{CONFIG\_CS\_PIN}}
+\index{CONFIG\_CS\_PIN@{CONFIG\_CS\_PIN}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{CONFIG\_CS\_PIN}
+{\footnotesize\ttfamily \#define C\+O\+N\+F\+I\+G\+\_\+\+C\+S\+\_\+\+P\+IN~22}
+
+\mbox{\label{project_rise_8cpp_a0e1bcfa5690b7c73ba43b4b3f4bc066c}} 
+\index{projectRise.cpp@{projectRise.cpp}!CONFIG\_MISO\_PIN@{CONFIG\_MISO\_PIN}}
+\index{CONFIG\_MISO\_PIN@{CONFIG\_MISO\_PIN}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{CONFIG\_MISO\_PIN}
+{\footnotesize\ttfamily \#define C\+O\+N\+F\+I\+G\+\_\+\+M\+I\+S\+O\+\_\+\+P\+IN~24}
+
+\mbox{\label{project_rise_8cpp_a2016fabd5c3b66d2c6cc7b32045b9a06}} 
+\index{projectRise.cpp@{projectRise.cpp}!CONFIG\_MOSI\_PIN@{CONFIG\_MOSI\_PIN}}
+\index{CONFIG\_MOSI\_PIN@{CONFIG\_MOSI\_PIN}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{CONFIG\_MOSI\_PIN}
+{\footnotesize\ttfamily \#define C\+O\+N\+F\+I\+G\+\_\+\+M\+O\+S\+I\+\_\+\+P\+IN~23}
+
+\mbox{\label{project_rise_8cpp_a0ffb6438606e9af7e4a526d8e9df8661}} 
+\index{projectRise.cpp@{projectRise.cpp}!CONFIG\_SCK\_PIN@{CONFIG\_SCK\_PIN}}
+\index{CONFIG\_SCK\_PIN@{CONFIG\_SCK\_PIN}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{CONFIG\_SCK\_PIN}
+{\footnotesize\ttfamily \#define C\+O\+N\+F\+I\+G\+\_\+\+S\+C\+K\+\_\+\+P\+IN~25}
+
+\mbox{\label{project_rise_8cpp_adc5cc47157d58a2ef4b4e6a02989d23e}} 
+\index{projectRise.cpp@{projectRise.cpp}!LIGHT\_TRACKER\_ENABLE@{LIGHT\_TRACKER\_ENABLE}}
+\index{LIGHT\_TRACKER\_ENABLE@{LIGHT\_TRACKER\_ENABLE}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{LIGHT\_TRACKER\_ENABLE}
+{\footnotesize\ttfamily \#define L\+I\+G\+H\+T\+\_\+\+T\+R\+A\+C\+K\+E\+R\+\_\+\+E\+N\+A\+B\+LE}
+
+\mbox{\label{project_rise_8cpp_a512470fd0a69a93011b0484b74ec3390}} 
+\index{projectRise.cpp@{projectRise.cpp}!LOGDIR@{LOGDIR}}
+\index{LOGDIR@{LOGDIR}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{LOGDIR}
+{\footnotesize\ttfamily \#define L\+O\+G\+D\+IR~\char`\"{}weather\char`\"{}}
+
+\mbox{\label{project_rise_8cpp_a2939a0ca46c107a3480a878e1755e3a5}} 
+\index{projectRise.cpp@{projectRise.cpp}!LOGFILE\_BINARY@{LOGFILE\_BINARY}}
+\index{LOGFILE\_BINARY@{LOGFILE\_BINARY}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{LOGFILE\_BINARY}
+{\footnotesize\ttfamily \#define L\+O\+G\+F\+I\+L\+E\+\_\+\+B\+I\+N\+A\+RY~\char`\"{}data.\+dat\char`\"{}}
+
+\mbox{\label{project_rise_8cpp_a83c54dac37abba97ca283e76dda7aed0}} 
+\index{projectRise.cpp@{projectRise.cpp}!LOGFILE\_TEXT@{LOGFILE\_TEXT}}
+\index{LOGFILE\_TEXT@{LOGFILE\_TEXT}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{LOGFILE\_TEXT}
+{\footnotesize\ttfamily \#define L\+O\+G\+F\+I\+L\+E\+\_\+\+T\+E\+XT~\char`\"{}data.\+log\char`\"{}}
+
+\mbox{\label{project_rise_8cpp_ad3b9760bb0975ff5f93d0d388f8e01bd}} 
+\index{projectRise.cpp@{projectRise.cpp}!RTC\_ENABLE@{RTC\_ENABLE}}
+\index{RTC\_ENABLE@{RTC\_ENABLE}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{RTC\_ENABLE}
+{\footnotesize\ttfamily \#define R\+T\+C\+\_\+\+E\+N\+A\+B\+LE}
+
+\mbox{\label{project_rise_8cpp_afd5564bf4d8c4bc55e2079b62cdc8731}} 
+\index{projectRise.cpp@{projectRise.cpp}!SD\_ENABLE@{SD\_ENABLE}}
+\index{SD\_ENABLE@{SD\_ENABLE}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{SD\_ENABLE}
+{\footnotesize\ttfamily \#define S\+D\+\_\+\+E\+N\+A\+B\+LE}
+
+\mbox{\label{project_rise_8cpp_ac136bd08fd64c146a62647f91a210067}} 
+\index{projectRise.cpp@{projectRise.cpp}!STRLEN@{STRLEN}}
+\index{STRLEN@{STRLEN}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{STRLEN}
+{\footnotesize\ttfamily \#define S\+T\+R\+L\+EN(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~(\textbf{ A\+R\+R\+C\+NT}((x)) -\/ 1U)}
+
+\mbox{\label{project_rise_8cpp_ad6414f1977fa664572a8e90328a7c11b}} 
+\index{projectRise.cpp@{projectRise.cpp}!TEST\_ELEMENTCOUNT@{TEST\_ELEMENTCOUNT}}
+\index{TEST\_ELEMENTCOUNT@{TEST\_ELEMENTCOUNT}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{TEST\_ELEMENTCOUNT}
+{\footnotesize\ttfamily \#define T\+E\+S\+T\+\_\+\+E\+L\+E\+M\+E\+N\+T\+C\+O\+U\+NT~2U}
+
+\mbox{\label{project_rise_8cpp_a150f5a4eb366bd248b116faf8cb04b32}} 
+\index{projectRise.cpp@{projectRise.cpp}!TEST\_READCOUNT@{TEST\_READCOUNT}}
+\index{TEST\_READCOUNT@{TEST\_READCOUNT}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{TEST\_READCOUNT}
+{\footnotesize\ttfamily \#define T\+E\+S\+T\+\_\+\+R\+E\+A\+D\+C\+O\+U\+NT~5U}
+
+\mbox{\label{project_rise_8cpp_aa54b5e004e33873b838cff4975667c68}} 
+\index{projectRise.cpp@{projectRise.cpp}!TEST\_READOFFSET@{TEST\_READOFFSET}}
+\index{TEST\_READOFFSET@{TEST\_READOFFSET}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{TEST\_READOFFSET}
+{\footnotesize\ttfamily \#define T\+E\+S\+T\+\_\+\+R\+E\+A\+D\+O\+F\+F\+S\+ET~0U}
+
+\mbox{\label{project_rise_8cpp_a2fba266115a21722ccc0ae9bee897c50}} 
+\index{projectRise.cpp@{projectRise.cpp}!TEST\_TOTALCOUNT@{TEST\_TOTALCOUNT}}
+\index{TEST\_TOTALCOUNT@{TEST\_TOTALCOUNT}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{TEST\_TOTALCOUNT}
+{\footnotesize\ttfamily \#define T\+E\+S\+T\+\_\+\+T\+O\+T\+A\+L\+C\+O\+U\+NT~((\textbf{ T\+E\+S\+T\+\_\+\+E\+L\+E\+M\+E\+N\+T\+C\+O\+U\+NT}) $\ast$ (\textbf{ T\+E\+S\+T\+\_\+\+R\+E\+A\+D\+C\+O\+U\+NT}))}
+
+\mbox{\label{project_rise_8cpp_a57491c12152e02b3ea3b5f4402c7c3db}} 
+\index{projectRise.cpp@{projectRise.cpp}!USE\_SDIO@{USE\_SDIO}}
+\index{USE\_SDIO@{USE\_SDIO}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{USE\_SDIO}
+{\footnotesize\ttfamily \#define U\+S\+E\+\_\+\+S\+D\+IO~0}
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\label{project_rise_8cpp_a3bc0287496bdd8ce55f9a4f89faafe7b}} 
+\index{projectRise.cpp@{projectRise.cpp}!getSensorValues@{getSensorValues}}
+\index{getSensorValues@{getSensorValues}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{getSensorValues()}
+{\footnotesize\ttfamily bool get\+Sensor\+Values (\begin{DoxyParamCaption}\item[{\textbf{ collection\+\_\+t} \&}]{result }\end{DoxyParamCaption})}
+
+\mbox{\label{project_rise_8cpp_a0b33edabd7f1c4e4a0bf32c67269be2f}} 
+\index{projectRise.cpp@{projectRise.cpp}!loop@{loop}}
+\index{loop@{loop}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{loop()}
+{\footnotesize\ttfamily void loop (\begin{DoxyParamCaption}\item[{void}]{ }\end{DoxyParamCaption})}
+
+\mbox{\label{project_rise_8cpp_a6bec9ee0eb5127ac4e6792a1b8fa70aa}} 
+\index{projectRise.cpp@{projectRise.cpp}!printSensorValues@{printSensorValues}}
+\index{printSensorValues@{printSensorValues}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{printSensorValues()}
+{\footnotesize\ttfamily void print\+Sensor\+Values (\begin{DoxyParamCaption}\item[{const \textbf{ collection\+\_\+t} \&}]{content }\end{DoxyParamCaption})}
+
+\mbox{\label{project_rise_8cpp_ab7c11479090960e0b46d5a36501ee0c3}} 
+\index{projectRise.cpp@{projectRise.cpp}!readBinaryFile@{readBinaryFile}}
+\index{readBinaryFile@{readBinaryFile}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{readBinaryFile()}
+{\footnotesize\ttfamily bool read\+Binary\+File (\begin{DoxyParamCaption}\item[{const char $\ast$const}]{filepath,  }\item[{\textbf{ collection\+\_\+t} $\ast$const}]{result,  }\item[{size\+\_\+t $\ast$const}]{result\+Count,  }\item[{const size\+\_\+t}]{count,  }\item[{const size\+\_\+t}]{index = {\ttfamily 0U} }\end{DoxyParamCaption})}
+
+\mbox{\label{project_rise_8cpp_a40c3496f6b93ee58c08e5d3b4cad81b1}} 
+\index{projectRise.cpp@{projectRise.cpp}!saveToFile@{saveToFile}}
+\index{saveToFile@{saveToFile}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{saveToFile()}
+{\footnotesize\ttfamily void save\+To\+File (\begin{DoxyParamCaption}\item[{void}]{ }\end{DoxyParamCaption})}
+
+\mbox{\label{project_rise_8cpp_a7dfd9b79bc5a37d7df40207afbc5431f}} 
+\index{projectRise.cpp@{projectRise.cpp}!setup@{setup}}
+\index{setup@{setup}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{setup()}
+{\footnotesize\ttfamily void setup (\begin{DoxyParamCaption}\item[{void}]{ }\end{DoxyParamCaption})}
+
+\mbox{\label{project_rise_8cpp_aa072ae4f267fb8fed39a15bc40a1d738}} 
+\index{projectRise.cpp@{projectRise.cpp}!setupSensors@{setupSensors}}
+\index{setupSensors@{setupSensors}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{setupSensors()}
+{\footnotesize\ttfamily bool setup\+Sensors (\begin{DoxyParamCaption}\item[{void}]{ }\end{DoxyParamCaption})}
+
+\mbox{\label{project_rise_8cpp_a4b61b6aa04dc3806cd9686460fb82287}} 
+\index{projectRise.cpp@{projectRise.cpp}!testReadFromFile@{testReadFromFile}}
+\index{testReadFromFile@{testReadFromFile}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{testReadFromFile()}
+{\footnotesize\ttfamily void test\+Read\+From\+File (\begin{DoxyParamCaption}\item[{void}]{ }\end{DoxyParamCaption})}
+
+\mbox{\label{project_rise_8cpp_a74689d15aa9034b712714bf39aa77463}} 
+\index{projectRise.cpp@{projectRise.cpp}!writeBinaryFile@{writeBinaryFile}}
+\index{writeBinaryFile@{writeBinaryFile}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{writeBinaryFile()}
+{\footnotesize\ttfamily bool write\+Binary\+File (\begin{DoxyParamCaption}\item[{const char $\ast$const}]{filepath,  }\item[{const \textbf{ collection\+\_\+t} \&}]{content }\end{DoxyParamCaption})}
+
+\mbox{\label{project_rise_8cpp_a3911f9230b70b2b2dfeaf9af20283bce}} 
+\index{projectRise.cpp@{projectRise.cpp}!writeTextFile@{writeTextFile}}
+\index{writeTextFile@{writeTextFile}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{writeTextFile()}
+{\footnotesize\ttfamily bool write\+Text\+File (\begin{DoxyParamCaption}\item[{const char $\ast$const}]{filepath,  }\item[{const \textbf{ collection\+\_\+t} \&}]{content }\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\label{project_rise_8cpp_abaf950da15db05e1ecc077a77a6803f7}} 
+\index{projectRise.cpp@{projectRise.cpp}!bmp@{bmp}}
+\index{bmp@{bmp}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{bmp}
+{\footnotesize\ttfamily Adafruit\+\_\+\+B\+M\+P280 bmp}
+
+\mbox{\label{project_rise_8cpp_a095749c1cc676d20517412186d34419e}} 
+\index{projectRise.cpp@{projectRise.cpp}!commandBuffer@{commandBuffer}}
+\index{commandBuffer@{commandBuffer}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{commandBuffer}
+{\footnotesize\ttfamily char command\+Buffer[16+1]}
+
+\mbox{\label{project_rise_8cpp_a5796b31952bb9c94c6aeb1f9a311cc15}} 
+\index{projectRise.cpp@{projectRise.cpp}!commandHandler@{commandHandler}}
+\index{commandHandler@{commandHandler}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{commandHandler}
+{\footnotesize\ttfamily \textbf{ Command\+Handler} command\+Handler(Serial, \textbf{ command\+Buffer}, sizeof(\textbf{ command\+Buffer}), \textbf{ handle\+Command})}
+
+\mbox{\label{project_rise_8cpp_ac6c464b0a83a481fee26175f6229c5cc}} 
+\index{projectRise.cpp@{projectRise.cpp}!counter@{counter}}
+\index{counter@{counter}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{counter}
+{\footnotesize\ttfamily unsigned int counter = 0U}
+
+\mbox{\label{project_rise_8cpp_a6b4456bce96d5e4d235983df5770dfe7}} 
+\index{projectRise.cpp@{projectRise.cpp}!lightTracker@{lightTracker}}
+\index{lightTracker@{lightTracker}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{lightTracker}
+{\footnotesize\ttfamily \textbf{ Light\+Tracker} light\+Tracker(44, 45, A8, A9, A10, A11, 0.\+25 $\ast$\textbf{ A\+N\+A\+L\+O\+G\+\_\+\+M\+AX}, 0.\+05 $\ast$\textbf{ A\+N\+A\+L\+O\+G\+\_\+\+M\+AX})}
+
+\mbox{\label{project_rise_8cpp_a4ec47257fb30c1289fbe32e510fed0d4}} 
+\index{projectRise.cpp@{projectRise.cpp}!measurementBuffer@{measurementBuffer}}
+\index{measurementBuffer@{measurementBuffer}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{measurementBuffer}
+{\footnotesize\ttfamily \textbf{ collection\+\_\+t} measurement\+Buffer}
+
+\mbox{\label{project_rise_8cpp_a92ddfa0eeaf5faba024dd0c0bfb804cd}} 
+\index{projectRise.cpp@{projectRise.cpp}!nextUpdate@{nextUpdate}}
+\index{nextUpdate@{nextUpdate}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{nextUpdate}
+{\footnotesize\ttfamily unsigned long next\+Update = 0\+UL}
+
+\mbox{\label{project_rise_8cpp_afa042f998806fcdedab1794cebbeaad3}} 
+\index{projectRise.cpp@{projectRise.cpp}!rtc@{rtc}}
+\index{rtc@{rtc}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{rtc}
+{\footnotesize\ttfamily R\+T\+C\+\_\+\+D\+S3231 rtc}
+
+\mbox{\label{project_rise_8cpp_a45490372e33fd4b367b62b4d8fd38321}} 
+\index{projectRise.cpp@{projectRise.cpp}!sd@{sd}}
+\index{sd@{sd}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{sd}
+{\footnotesize\ttfamily Sd\+Fat\+Soft\+Spi$<$\textbf{ C\+O\+N\+F\+I\+G\+\_\+\+M\+I\+S\+O\+\_\+\+P\+IN}, \textbf{ C\+O\+N\+F\+I\+G\+\_\+\+M\+O\+S\+I\+\_\+\+P\+IN}, \textbf{ C\+O\+N\+F\+I\+G\+\_\+\+S\+C\+K\+\_\+\+P\+IN}$>$ sd}
+
+\mbox{\label{project_rise_8cpp_a62681c8837803be88b669976ab3e245c}} 
+\index{projectRise.cpp@{projectRise.cpp}!sleepDuration@{sleepDuration}}
+\index{sleepDuration@{sleepDuration}!projectRise.cpp@{projectRise.cpp}}
+\doxysubsubsection{sleepDuration}
+{\footnotesize\ttfamily unsigned long sleep\+Duration = 60\+UL $\ast$ 1000\+UL}
+

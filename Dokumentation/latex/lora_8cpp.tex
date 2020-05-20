@@ -1,0 +1,101 @@
+\doxysection{src/lora.cpp File Reference}
+\label{lora_8cpp}\index{src/lora.cpp@{src/lora.cpp}}
+{\ttfamily \#include \char`\"{}lora.\+hpp\char`\"{}}\newline
+{\ttfamily \#include $<$lmic.\+h$>$}\newline
+{\ttfamily \#include $<$hal/hal.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}types.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}debug.\+hpp\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}config.\+h\char`\"{}}\newline
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \textbf{ C\+O\+N\+F\+I\+G\+\_\+\+I\+N\+T\+E\+R\+V\+AL}~60\+UL
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \textbf{ os\+\_\+get\+Art\+Eui} (u1\+\_\+t $\ast$buf)
+\item 
+void \textbf{ os\+\_\+get\+Dev\+Eui} (u1\+\_\+t $\ast$buf)
+\item 
+void \textbf{ os\+\_\+get\+Dev\+Key} (u1\+\_\+t $\ast$buf)
+\item 
+void \textbf{ on\+Event} (ev\+\_\+t ev)
+\item 
+void \textbf{ setup\+Lo\+Ra} (void)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+const lmic\+\_\+pinmap \textbf{ lmic\+\_\+pins}
+\item 
+\textbf{ collection\+\_\+t} \textbf{ measurement\+Buffer}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\label{lora_8cpp_a89307609a426af66356cc55b6b0e64b4}} 
+\index{lora.cpp@{lora.cpp}!CONFIG\_INTERVAL@{CONFIG\_INTERVAL}}
+\index{CONFIG\_INTERVAL@{CONFIG\_INTERVAL}!lora.cpp@{lora.cpp}}
+\doxysubsubsection{CONFIG\_INTERVAL}
+{\footnotesize\ttfamily \#define C\+O\+N\+F\+I\+G\+\_\+\+I\+N\+T\+E\+R\+V\+AL~60\+UL}
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\label{lora_8cpp_aaead836f5e0f65f5906b7ce269e92436}} 
+\index{lora.cpp@{lora.cpp}!onEvent@{onEvent}}
+\index{onEvent@{onEvent}!lora.cpp@{lora.cpp}}
+\doxysubsubsection{onEvent()}
+{\footnotesize\ttfamily void on\+Event (\begin{DoxyParamCaption}\item[{ev\+\_\+t}]{ev }\end{DoxyParamCaption})}
+
+\mbox{\label{lora_8cpp_ad00e5aa32f425c7cf5b551edbe4e2018}} 
+\index{lora.cpp@{lora.cpp}!os\_getArtEui@{os\_getArtEui}}
+\index{os\_getArtEui@{os\_getArtEui}!lora.cpp@{lora.cpp}}
+\doxysubsubsection{os\_getArtEui()}
+{\footnotesize\ttfamily void os\+\_\+get\+Art\+Eui (\begin{DoxyParamCaption}\item[{u1\+\_\+t $\ast$}]{buf }\end{DoxyParamCaption})}
+
+\mbox{\label{lora_8cpp_a59f8459c9afe001b9d082b88f24bbc06}} 
+\index{lora.cpp@{lora.cpp}!os\_getDevEui@{os\_getDevEui}}
+\index{os\_getDevEui@{os\_getDevEui}!lora.cpp@{lora.cpp}}
+\doxysubsubsection{os\_getDevEui()}
+{\footnotesize\ttfamily void os\+\_\+get\+Dev\+Eui (\begin{DoxyParamCaption}\item[{u1\+\_\+t $\ast$}]{buf }\end{DoxyParamCaption})}
+
+\mbox{\label{lora_8cpp_a876d512ca10c7f577c86f5dc1894bc49}} 
+\index{lora.cpp@{lora.cpp}!os\_getDevKey@{os\_getDevKey}}
+\index{os\_getDevKey@{os\_getDevKey}!lora.cpp@{lora.cpp}}
+\doxysubsubsection{os\_getDevKey()}
+{\footnotesize\ttfamily void os\+\_\+get\+Dev\+Key (\begin{DoxyParamCaption}\item[{u1\+\_\+t $\ast$}]{buf }\end{DoxyParamCaption})}
+
+\mbox{\label{lora_8cpp_a448eed8b5a30ed5b6e87775ec663a1c2}} 
+\index{lora.cpp@{lora.cpp}!setupLoRa@{setupLoRa}}
+\index{setupLoRa@{setupLoRa}!lora.cpp@{lora.cpp}}
+\doxysubsubsection{setupLoRa()}
+{\footnotesize\ttfamily void setup\+Lo\+Ra (\begin{DoxyParamCaption}\item[{void}]{ }\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\label{lora_8cpp_a82b2c57ed09941537a4e8bf84b35a5eb}} 
+\index{lora.cpp@{lora.cpp}!lmic\_pins@{lmic\_pins}}
+\index{lmic\_pins@{lmic\_pins}!lora.cpp@{lora.cpp}}
+\doxysubsubsection{lmic\_pins}
+{\footnotesize\ttfamily const lmic\+\_\+pinmap lmic\+\_\+pins}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{=}
+\DoxyCodeLine{\{}
+\DoxyCodeLine{    .nss = 10,}
+\DoxyCodeLine{    .rxtx = LMIC\_UNUSED\_PIN,}
+\DoxyCodeLine{    .rst = 9,}
+\DoxyCodeLine{    .dio = \{ 2, 6, 7 \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+\mbox{\label{lora_8cpp_a4ec47257fb30c1289fbe32e510fed0d4}} 
+\index{lora.cpp@{lora.cpp}!measurementBuffer@{measurementBuffer}}
+\index{measurementBuffer@{measurementBuffer}!lora.cpp@{lora.cpp}}
+\doxysubsubsection{measurementBuffer}
+{\footnotesize\ttfamily \textbf{ collection\+\_\+t} measurement\+Buffer}
+

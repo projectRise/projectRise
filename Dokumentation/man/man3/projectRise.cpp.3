@@ -1,0 +1,274 @@
+.TH "projectRise.cpp" 3 "Thu May 14 2020" "My Project" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+projectRise.cpp
+.SH SYNOPSIS
+.br
+.PP
+\fC#include <stdint\&.h>\fP
+.br
+\fC#include <SPI\&.h>\fP
+.br
+\fC#include <SdFat\&.h>\fP
+.br
+\fC#include <RTClib\&.h>\fP
+.br
+\fC#include <Sleep_n0m1\&.h>\fP
+.br
+\fC#include <lmic\&.h>\fP
+.br
+\fC#include <hal/hal\&.h>\fP
+.br
+\fC#include 'types\&.h'\fP
+.br
+\fC#include 'lora\&.hpp'\fP
+.br
+\fC#include 'WeatherShield\&.hpp'\fP
+.br
+\fC#include 'LightTracker\&.hpp'\fP
+.br
+\fC#include 'CommandHandler\&.hpp'\fP
+.br
+\fC#include 'misc\&.hpp'\fP
+.br
+\fC#include 'debug\&.hpp'\fP
+.br
+\fC#include 'sdios\&.h'\fP
+.br
+\fC#include <Wire\&.h>\fP
+.br
+\fC#include <Adafruit_BMP280\&.h>\fP
+.br
+
+.SS "Macros"
+
+.in +1c
+.ti -1c
+.RI "#define \fBUSE_SDIO\fP   0"
+.br
+.ti -1c
+.RI "#define \fBARRCNT\fP(x)   (sizeof((x)) / sizeof(*(x)))"
+.br
+.ti -1c
+.RI "#define \fBSTRLEN\fP(x)   (\fBARRCNT\fP((x)) \- 1U)"
+.br
+.ti -1c
+.RI "#define \fBANALOG_MAX\fP   ((1 << 10) \- 1)"
+.br
+.ti -1c
+.RI "#define \fBSD_ENABLE\fP"
+.br
+.ti -1c
+.RI "#define \fBLIGHT_TRACKER_ENABLE\fP"
+.br
+.ti -1c
+.RI "#define \fBRTC_ENABLE\fP"
+.br
+.ti -1c
+.RI "#define \fBBMP_ENABLE\fP"
+.br
+.ti -1c
+.RI "#define \fBCONFIG_MISO_PIN\fP   24"
+.br
+.ti -1c
+.RI "#define \fBCONFIG_MOSI_PIN\fP   23"
+.br
+.ti -1c
+.RI "#define \fBCONFIG_SCK_PIN\fP   25"
+.br
+.ti -1c
+.RI "#define \fBCONFIG_CS_PIN\fP   22"
+.br
+.ti -1c
+.RI "#define \fBLOGDIR\fP   'weather'"
+.br
+.ti -1c
+.RI "#define \fBLOGFILE_TEXT\fP   'data\&.log'"
+.br
+.ti -1c
+.RI "#define \fBLOGFILE_BINARY\fP   'data\&.dat'"
+.br
+.ti -1c
+.RI "#define \fBTEST_READOFFSET\fP   0U"
+.br
+.ti -1c
+.RI "#define \fBTEST_ELEMENTCOUNT\fP   2U"
+.br
+.ti -1c
+.RI "#define \fBTEST_READCOUNT\fP   5U"
+.br
+.ti -1c
+.RI "#define \fBTEST_TOTALCOUNT\fP   ((\fBTEST_ELEMENTCOUNT\fP) * (\fBTEST_READCOUNT\fP))"
+.br
+.in -1c
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "bool \fBgetSensorValues\fP (\fBcollection_t\fP &result)"
+.br
+.ti -1c
+.RI "void \fBsaveToFile\fP (void)"
+.br
+.ti -1c
+.RI "bool \fBwriteTextFile\fP (const char *const filepath, const \fBcollection_t\fP &content)"
+.br
+.ti -1c
+.RI "bool \fBwriteBinaryFile\fP (const char *const filepath, const \fBcollection_t\fP &content)"
+.br
+.ti -1c
+.RI "bool \fBreadBinaryFile\fP (const char *const filepath, \fBcollection_t\fP *const result, size_t *const resultCount, const size_t count, const size_t index=0U)"
+.br
+.ti -1c
+.RI "void \fBprintSensorValues\fP (const \fBcollection_t\fP &content)"
+.br
+.ti -1c
+.RI "void \fBtestReadFromFile\fP (void)"
+.br
+.ti -1c
+.RI "bool \fBsetupSensors\fP (void)"
+.br
+.ti -1c
+.RI "void \fBsetup\fP (void)"
+.br
+.ti -1c
+.RI "void \fBloop\fP (void)"
+.br
+.in -1c
+.SS "Variables"
+
+.in +1c
+.ti -1c
+.RI "SdFatSoftSpi< \fBCONFIG_MISO_PIN\fP, \fBCONFIG_MOSI_PIN\fP, \fBCONFIG_SCK_PIN\fP > \fBsd\fP"
+.br
+.ti -1c
+.RI "unsigned long \fBsleepDuration\fP = 60UL * 1000UL"
+.br
+.ti -1c
+.RI "RTC_DS3231 \fBrtc\fP"
+.br
+.ti -1c
+.RI "\fBLightTracker\fP \fBlightTracker\fP (44, 45, A8, A9, A10, A11, 0\&.25 *\fBANALOG_MAX\fP, 0\&.05 *\fBANALOG_MAX\fP)"
+.br
+.ti -1c
+.RI "Adafruit_BMP280 \fBbmp\fP"
+.br
+.ti -1c
+.RI "char \fBcommandBuffer\fP [16+1]"
+.br
+.ti -1c
+.RI "\fBCommandHandler\fP \fBcommandHandler\fP (Serial, \fBcommandBuffer\fP, sizeof(\fBcommandBuffer\fP), \fBhandleCommand\fP)"
+.br
+.ti -1c
+.RI "unsigned long \fBnextUpdate\fP = 0UL"
+.br
+.ti -1c
+.RI "unsigned int \fBcounter\fP = 0U"
+.br
+.ti -1c
+.RI "\fBcollection_t\fP \fBmeasurementBuffer\fP"
+.br
+.in -1c
+.SH "Detailed Description"
+.PP 
+\fBprojectRise\&.cpp\fP Main code of the energy harvesting/weather station project
+.PP
+\fBAuthors\fP
+.RS 4
+albrdev (albrdev@gmail.com), Ziiny (sebastian.cobert@gmail.com) 
+.RE
+.PP
+\fBDate\fP
+.RS 4
+2020-02-06 
+.RE
+.PP
+
+.SH "Macro Definition Documentation"
+.PP 
+.SS "#define ANALOG_MAX   ((1 << 10) \- 1)"
+
+.SS "#define ARRCNT(x)   (sizeof((x)) / sizeof(*(x)))"
+
+.SS "#define BMP_ENABLE"
+
+.SS "#define CONFIG_CS_PIN   22"
+
+.SS "#define CONFIG_MISO_PIN   24"
+
+.SS "#define CONFIG_MOSI_PIN   23"
+
+.SS "#define CONFIG_SCK_PIN   25"
+
+.SS "#define LIGHT_TRACKER_ENABLE"
+
+.SS "#define LOGDIR   'weather'"
+
+.SS "#define LOGFILE_BINARY   'data\&.dat'"
+
+.SS "#define LOGFILE_TEXT   'data\&.log'"
+
+.SS "#define RTC_ENABLE"
+
+.SS "#define SD_ENABLE"
+
+.SS "#define STRLEN(x)   (\fBARRCNT\fP((x)) \- 1U)"
+
+.SS "#define TEST_ELEMENTCOUNT   2U"
+
+.SS "#define TEST_READCOUNT   5U"
+
+.SS "#define TEST_READOFFSET   0U"
+
+.SS "#define TEST_TOTALCOUNT   ((\fBTEST_ELEMENTCOUNT\fP) * (\fBTEST_READCOUNT\fP))"
+
+.SS "#define USE_SDIO   0"
+
+.SH "Function Documentation"
+.PP 
+.SS "bool getSensorValues (\fBcollection_t\fP & result)"
+
+.SS "void loop (void)"
+
+.SS "void printSensorValues (const \fBcollection_t\fP & content)"
+
+.SS "bool readBinaryFile (const char *const filepath, \fBcollection_t\fP *const result, size_t *const resultCount, const size_t count, const size_t index = \fC0U\fP)"
+
+.SS "void saveToFile (void)"
+
+.SS "void setup (void)"
+
+.SS "bool setupSensors (void)"
+
+.SS "void testReadFromFile (void)"
+
+.SS "bool writeBinaryFile (const char *const filepath, const \fBcollection_t\fP & content)"
+
+.SS "bool writeTextFile (const char *const filepath, const \fBcollection_t\fP & content)"
+
+.SH "Variable Documentation"
+.PP 
+.SS "Adafruit_BMP280 bmp"
+
+.SS "char commandBuffer[16+1]"
+
+.SS "\fBCommandHandler\fP commandHandler(Serial, \fBcommandBuffer\fP, sizeof(\fBcommandBuffer\fP), \fBhandleCommand\fP)"
+
+.SS "unsigned int counter = 0U"
+
+.SS "\fBLightTracker\fP lightTracker(44, 45, A8, A9, A10, A11, 0\&.25 *\fBANALOG_MAX\fP, 0\&.05 *\fBANALOG_MAX\fP)"
+
+.SS "\fBcollection_t\fP measurementBuffer"
+
+.SS "unsigned long nextUpdate = 0UL"
+
+.SS "RTC_DS3231 rtc"
+
+.SS "SdFatSoftSpi<\fBCONFIG_MISO_PIN\fP, \fBCONFIG_MOSI_PIN\fP, \fBCONFIG_SCK_PIN\fP> sd"
+
+.SS "unsigned long sleepDuration = 60UL * 1000UL"
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for My Project from the source code\&.

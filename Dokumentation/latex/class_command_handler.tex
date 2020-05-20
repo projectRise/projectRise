@@ -1,0 +1,63 @@
+\doxysection{Command\+Handler Class Reference}
+\label{class_command_handler}\index{CommandHandler@{CommandHandler}}
+
+
+{\ttfamily \#include $<$Command\+Handler.\+hpp$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+bool \textbf{ Receive} (void)
+\item 
+{\footnotesize template$<$class T $>$ }\\size\+\_\+t \textbf{ Send} (const T \&msg)
+\item 
+{\footnotesize template$<$class T $>$ }\\size\+\_\+t \textbf{ Send\+Line} (const T \&msg)
+\item 
+void \textbf{ Flush} (void)
+\item 
+\textbf{ Command\+Handler} (Stream \&source, char $\ast$buffer, size\+\_\+t size, \textbf{ cmdhndlr\+\_\+t} callback)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\label{class_command_handler_aa76fef8c51520c3d04b21d47090dd9ae}} 
+\index{CommandHandler@{CommandHandler}!CommandHandler@{CommandHandler}}
+\index{CommandHandler@{CommandHandler}!CommandHandler@{CommandHandler}}
+\doxysubsubsection{CommandHandler()}
+{\footnotesize\ttfamily Command\+Handler\+::\+Command\+Handler (\begin{DoxyParamCaption}\item[{Stream \&}]{source,  }\item[{char $\ast$}]{buffer,  }\item[{size\+\_\+t}]{size,  }\item[{\textbf{ cmdhndlr\+\_\+t}}]{callback }\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\label{class_command_handler_a520e24e07d109127c83a75472398b0a7}} 
+\index{CommandHandler@{CommandHandler}!Flush@{Flush}}
+\index{Flush@{Flush}!CommandHandler@{CommandHandler}}
+\doxysubsubsection{Flush()}
+{\footnotesize\ttfamily void Command\+Handler\+::\+Flush (\begin{DoxyParamCaption}\item[{void}]{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\label{class_command_handler_aa8b4373232c1fa3ede64c782078d5a1b}} 
+\index{CommandHandler@{CommandHandler}!Receive@{Receive}}
+\index{Receive@{Receive}!CommandHandler@{CommandHandler}}
+\doxysubsubsection{Receive()}
+{\footnotesize\ttfamily bool Command\+Handler\+::\+Receive (\begin{DoxyParamCaption}\item[{void}]{ }\end{DoxyParamCaption})}
+
+\mbox{\label{class_command_handler_a6804a8c0b0d3a85acbea7ba8fed7e13e}} 
+\index{CommandHandler@{CommandHandler}!Send@{Send}}
+\index{Send@{Send}!CommandHandler@{CommandHandler}}
+\doxysubsubsection{Send()}
+{\footnotesize\ttfamily template$<$class T $>$ \\
+size\+\_\+t Command\+Handler\+::\+Send (\begin{DoxyParamCaption}\item[{const T \&}]{msg }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\label{class_command_handler_aa695249bfe0bddf3965c63b006887668}} 
+\index{CommandHandler@{CommandHandler}!SendLine@{SendLine}}
+\index{SendLine@{SendLine}!CommandHandler@{CommandHandler}}
+\doxysubsubsection{SendLine()}
+{\footnotesize\ttfamily template$<$class T $>$ \\
+size\+\_\+t Command\+Handler\+::\+Send\+Line (\begin{DoxyParamCaption}\item[{const T \&}]{msg }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+inc/\textbf{ Command\+Handler.\+hpp}\item 
+src/\textbf{ Command\+Handler.\+cpp}\end{DoxyCompactItemize}
