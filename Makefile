@@ -16,6 +16,10 @@ config:
 	# *NIX:		export SP_PORT="/dev/ttySn"
 	@python ./config_device.py "$(SP_PORT)"
 
+.PHONY: test
+test:
+	$(MAKE) -C test
+
 .PHONY: clean
 clean: clean
 	$(CC) run --target clean
