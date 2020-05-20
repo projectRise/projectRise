@@ -248,20 +248,20 @@ void loop(void)
 #define TEST_ELEMENTCOUNT   2U                                          // How many 'collection_t' to request per read (a.k.a. 'collection_t' count of the buffer).
 #define TEST_READCOUNT      5U                                          // Total number of read operations.
 #define TEST_TOTALCOUNT     ((TEST_ELEMENTCOUNT) * (TEST_READCOUNT))    // The total number of 'collection_t' values to read.
-void testReadFromFile(void)
+void testReadFromFile(collection_t* const results, const size_t resultCount, const size_t iterCount, const size_t offset)
 {
     collection_t vals[TEST_ELEMENTCOUNT];
     size_t readCount = 0U;
-    const size_t max = TEST_READOFFSET + TEST_TOTALCOUNT;
-    for(size_t i = TEST_READOFFSET; i < max; i += TEST_ELEMENTCOUNT)
+    const size_t max = offset + (resultCount * iterCount);
+    for(size_t i = offset; i < max; i += resultCount)
     {
-        if(!readBinaryFile(LOGFILE_BINARY, vals, &readCount, TEST_ELEMENTCOUNT, i))
+        if(!readBinaryFile(LOGFILE_BINARY, vals, &readCount, resultCount, i))
         {
             DebugPrintLine("Error: Could not read from file \'" LOGFILE_BINARY "\'");
             break;
         }
 
-        for(size_t j = 0U; j < TEST_ELEMENTCOUNT; j++)
+        for(size_t j = 0U; j < resultCount; j++)
         {
             DebugPrint("VALUE["); DebugPrint(i + j); DebugPrintLine("]: ");
             printSensorValues(vals[j]);
