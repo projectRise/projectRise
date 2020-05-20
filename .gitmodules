@@ -3,3 +3,15 @@
 	url = git@github.com:ThrowTheSwitch/Unity.git
 	url = https://github.com/ThrowTheSwitch/Unity.git
 	branch = master
+
+[submodule "back-end"]
+	path = back-end
+	url = git@github.com:projectRise/back-end.git
+	url = https://github.com/projectRise/back-end.git
+	branch = master
+
+[submodule "front-end"]
+	path = front-end
+	url = git@github.com:projectRise/front-end.git
+	url = https://github.com/projectRise/front-end.git
+	branch = master
