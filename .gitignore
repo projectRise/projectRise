@@ -9,6 +9,8 @@ Debug/
 Release/
 *.sln
 *.vcxproj*
+.vscode/
+.project
 
 # Config
 /config.h
