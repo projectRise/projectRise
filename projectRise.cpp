@@ -1,5 +1,5 @@
 /*! projectRise.cpp
-    Main code of the energy harvesting/weather station project
+    Main code of the energy harvesting/air quality project
     \file       projectRise.cpp
     \authors    albrdev (albrdev@gmail.com), Ziiny (sebastian.cobert@gmail.com)
     \date       2020-02-06
