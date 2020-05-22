@@ -93,27 +93,22 @@ void printSensorValues(const payload_t& content)
     DebugFlush();
 }
 
-#define TEST_READOFFSET     0U                                          // Position in the file to start reading (should be even divisible by size of 'payload_t').
-#define TEST_ELEMENTCOUNT   2U                                          // How many 'payload_t' to request per read (a.k.a. 'payload_t' count of the buffer).
-#define TEST_READCOUNT      5U                                          // Total number of read operations.
-#define TEST_TOTALCOUNT     ((TEST_ELEMENTCOUNT) * (TEST_READCOUNT))    // The total number of 'payload_t' values to read.
-void testReadFromFile(const char* filename)
+void testReadFromFile(const char* filename, payload_t* const results, const size_t resultCount, const size_t iterCount, const size_t offset)
 {
-    payload_t vals[TEST_ELEMENTCOUNT];
     size_t readCount = 0U;
-    const size_t max = TEST_READOFFSET + TEST_TOTALCOUNT;
-    for(size_t i = TEST_READOFFSET; i < max; i += TEST_ELEMENTCOUNT)
+    const size_t max = offset + (resultCount * iterCount);
+    for(size_t i = offset; i < max; i += resultCount)
     {
-        if(!readBinaryFile(filename, vals, &readCount, TEST_ELEMENTCOUNT, i))
+        if(!readBinaryFile(filename, results, &readCount, resultCount, i))
         {
             DebugPrint("Error: Could not read from file \'"); DebugPrint(filename); DebugPrintLine("\'");
             break;
         }
 
-        for(size_t j = 0U; j < TEST_ELEMENTCOUNT; j++)
+        for(size_t j = 0U; j < resultCount; j++)
         {
             DebugPrint("VALUE["); DebugPrint(i + j); DebugPrintLine("]: ");
-            printSensorValues(vals[j]);
+            printSensorValues(results[j]);
         }
     }
 }

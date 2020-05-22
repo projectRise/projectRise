@@ -30,9 +30,14 @@
 #define MS_PER_H                ((60UL * 60UL) * 1000UL)
 #define MEASUREMENT_INTERVAL    (5UL * 1000UL)
 
-#define LOGDIR          "environg"
-#define LOGFILE_TEXT    "data.log"
-#define LOGFILE_BINARY  "data.dat"
+#define LOGDIR                  "environg"
+#define LOGFILE_TEXT            "data.log"
+#define LOGFILE_BINARY          "data.dat"
+
+#define TEST_READOFFSET         0U                                          // Position in the file to start reading (should be even divisible by size of 'payload_t').
+#define TEST_ELEMENTCOUNT       2U                                          // How many 'payload_t' to request per read (a.k.a. 'payload_t' count of the buffer).
+#define TEST_READCOUNT          5U                                          // Total number of read operations.
+#define TEST_TOTALCOUNT         ((TEST_ELEMENTCOUNT) * (TEST_READCOUNT))    // The total number of 'payload_t' values to read.
 
 char commandBuffer[16 + 1];
 payload_t measurement;

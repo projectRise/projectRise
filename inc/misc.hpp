@@ -13,7 +13,7 @@
 #define CMD_DT      "DT"
 
 bool handleCommand(CommandHandler* self, const char* cmd, const char* args);
-void testReadFromFile(const char* filename);
+void testReadFromFile(const char* filename, payload_t* const results, const size_t resultCount, const size_t iterCount, const size_t offset);
 void printSensorValues(const payload_t& content);
 
 #endif  // __MISC_HPP__
