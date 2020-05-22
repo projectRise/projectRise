@@ -5,13 +5,11 @@
     \date       2020-02-06
 */
 
-//#define ENABLE_SOFTWARE_SPI_CLASS 1
-
 #include <stdint.h>
 #include <SPI.h>
 #include <SdFat.h>
 #include <RTClib.h>
-#include <Sleep_n0m1.h>         //  A library that sets the Arduino into sleep mode
+#include <Sleep_n0m1.h>
 #include "types.h"
 #include "CommandHandler.hpp"
 #include "Sunrise.h"
