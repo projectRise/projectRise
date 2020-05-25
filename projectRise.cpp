@@ -147,12 +147,12 @@ void loop(void)
     #ifdef SD_ENABLE
     if(!writeTextFile(LOGFILE_TEXT, measurement))
     {
-        DebugPrintLine("Error: Could not open \'" LOGFILE_TEXT "\' for writing");
+        DebugPrintLine("Error: Could not write to \'" LOGFILE_TEXT "\'");
     }
     #endif
     #endif
 
-    DebugPrint("VALUE["); DebugPrint(counter); DebugPrintLine("]");
+    DebugPrint("MEASUREMENT["); DebugPrint(counter); DebugPrintLine("]");
     printSensorValues(measurement);
     counter++;
 
@@ -210,6 +210,7 @@ void setupRTC(void)
         while(true);
     }
 
+    #ifdef __DEBUG__
     DateTime tmpTime = rtc.now();
     DebugPrintF("Current time: ");
     char formatBuffer[] = "YYYY-MM-DD hh:mm:ss";
@@ -217,6 +218,7 @@ void setupRTC(void)
     DebugPrintF(" (");
     DebugPrint(tmpTime.unixtime());
     DebugPrintLineF(")");
+    #endif
 
     if(rtc.lostPower())
     {
