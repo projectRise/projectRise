@@ -144,7 +144,6 @@ void setup(void)
     #endif
 
     #ifdef LIGHT_TRACKER_ENABLE
-    DebugPrintLineF("Light tracker...");
     lightTracker.Begin();
     #endif
 
@@ -273,14 +272,14 @@ void setupRTC(void)
 {
     if(!rtc.begin())
     {
-        DebugPrintLineF(ERRMSG_RTC_INIT);
+        DebugPrintLine(ERRMSG_RTC_INIT);
         logError(logtype_t::LT_ERROR, ERRMSG_RTC_INIT);
         setState(false);
     }
 
     if(rtc.lostPower())
     {
-        DebugPrintLineF(WRNMSG_RTC_LOST_TIME);
+        DebugPrintLine(WRNMSG_RTC_LOST_TIME);
         logError(logtype_t::LT_WARNING, WRNMSG_RTC_LOST_TIME);
         #ifdef SETUP_ENABLE
         delay(2500UL);
@@ -296,7 +295,7 @@ void setupSunrise(void)
     // Initial device setup. Also retrieves initial measurement state.
     if(!sunrise.Begin(PIN_EN, true))
     {
-        DebugPrintLineF(ERRMSG_SENSOR_INIT);
+        DebugPrintLine(ERRMSG_SENSOR_INIT);
         logError(logtype_t::LT_ERROR, ERRMSG_SENSOR_INIT);
         setState(false);
     }
@@ -307,14 +306,14 @@ void setupSunrise(void)
     metercontrol_t mc;
     if(!sunrise.GetMeterControlEE(mc))
     {
-        DebugPrintLineF(ERRMSG_SENSOR_GET_METER_CONTROL);
+        DebugPrintLine(ERRMSG_SENSOR_GET_METER_CONTROL);
         logError(logtype_t::LT_ERROR, ERRMSG_SENSOR_GET_METER_CONTROL);
         setState(false);
     }
 
     if(!mc.nrdy)
     {
-        DebugPrintLineF(ERRMSG_SENSOR_NRDY);
+        DebugPrintLine(ERRMSG_SENSOR_NRDY);
         logError(logtype_t::LT_ERROR, ERRMSG_SENSOR_NRDY);
         setState(false);
     }
@@ -322,7 +321,7 @@ void setupSunrise(void)
     uint16_t nos;
     if(!sunrise.GetNumberOfSamplesEE(nos))
     {
-        DebugPrintLineF(ERRMSG_SENSOR_NUMBER_OF_SAMPLES);
+        DebugPrintLine(ERRMSG_SENSOR_NUMBER_OF_SAMPLES);
         logError(logtype_t::LT_ERROR, ERRMSG_SENSOR_NUMBER_OF_SAMPLES);
         setState(false);
     }
@@ -348,7 +347,7 @@ bool readCO2(void)
     isReady = false;
     if(!sunrise.StartSingleMeasurement())
     {
-        DebugPrintLineF(ERRMSG_SENSOR_START_MEASRUEENT);
+        DebugPrintLine(ERRMSG_SENSOR_START_MEASRUEENT);
         logError(logtype_t::LT_ERROR, ERRMSG_SENSOR_START_MEASRUEENT);
         return false;
     }
@@ -357,7 +356,7 @@ bool readCO2(void)
     unsigned long int measurementStartTime = millis();
     if(!awaitISR(estimatedMeasurementDuration))
     {
-        DebugPrintLineF(ERRMSG_SENSOR_ISR_TIMEOUT);
+        DebugPrintLine(ERRMSG_SENSOR_ISR_TIMEOUT);
         logError(logtype_t::LT_ERROR, ERRMSG_SENSOR_ISR_TIMEOUT);
         return false;
     }
@@ -368,7 +367,7 @@ bool readCO2(void)
     // Read and print measurement values.
     if(!sunrise.ReadMeasurement())
     {
-        DebugPrintLineF(ERRMSG_SENSOR_READ_MEASUREMENT);
+        DebugPrintLine(ERRMSG_SENSOR_READ_MEASUREMENT);
         logError(logtype_t::LT_ERROR, ERRMSG_SENSOR_READ_MEASUREMENT);
         return false;
     }
