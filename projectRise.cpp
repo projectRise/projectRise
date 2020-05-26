@@ -7,30 +7,61 @@
 
 #include <stdint.h>
 #include <SPI.h>
+#ifdef SD_ENABLE
 #include <SdFat.h>
+#endif
+
 #include <RTClib.h>
+
+#if SLEEP_ENABLE
 #include <Sleep_n0m1.h>
+#endif
+
 #include "types.h"
 #include "CommandHandler.hpp"
 #include "Sunrise.h"
 #include "LightTracker.hpp"
 #include "misc.hpp"
 #include "debug.hpp"
+#ifdef SD_ENABLE
 #include "sdios.h"
+#endif
 
+const char* ERRMSG_RTC_INIT = "Could not initialize RTC device";
+const char* ERRMSG_SENSOR_INIT = "Could not initialize sensor device";
+const char* ERRMSG_SENSOR_GET_METER_CONTROL = "Could not get meter control";
+const char* ERRMSG_SENSOR_NRDY = "ERROR : NRDY option should be enabled";
+const char* ERRMSG_SENSOR_NUMBER_OF_SAMPLES = "ERROR : Could not get number of samples";
+const char* ERRMSG_SENSOR_START_MEASRUEENT = "Could not start measurement";
+const char* ERRMSG_SENSOR_ISR_TIMEOUT = "ISR timeout";
+const char* ERRMSG_SENSOR_READ_MEASUREMENT = "Could not read measurement";
+const char* ERRMSG_SENSOR_GET_MEASUREMENT_MODE = "Could not get measurement mode";
+const char* ERRMSG_SENSOR_SET_MEASUREMENT_MODE = "Could not set measurement mode";
+const char* ERRMSG_SENSOR_RESTART = "Failed to restart sensor device";
+const char* WRNMSG_RTC_LOST_TIME = "RTC may have lost track of time";
+
+#ifdef SD_ENABLE
 #define USE_SDIO                0
+#endif
 
 #define ANALOG_MAX              ((1 << 10) - 1)
 
+#define PIN_ERRORLED            8
+#define PIN_OKLED               9
+
+#define SUNRISE_ADDRESS         0x69
 #define PIN_EN                  2
 #define PIN_NRDY                3
-
-#define MS_PER_H                ((60UL * 60UL) * 1000UL)
 #define MEASUREMENT_INTERVAL    (5UL * 1000UL)
+#define SECONDS_PER_HOUR        ((60U * 60U) * 1000U)
+
+#define SAMPLE_DURATION         200UL
+#define CALIBRATION_DURATION    50UL
 
 #define LOGDIR                  "environg"
-#define LOGFILE_TEXT            "data.log"
+#define LOGFILE_TEXT            "data.csv"
 #define LOGFILE_BINARY          "data.dat"
+#define ERRORFILE               "error.log"
 
 #define TEST_READOFFSET         0U                                          // Position in the file to start reading (should be even divisible by size of 'payload_t').
 #define TEST_ELEMENTCOUNT       2U                                          // How many 'payload_t' to request per read (a.k.a. 'payload_t' count of the buffer).
@@ -43,18 +74,30 @@ unsigned long int sleepDuration = 60UL * 1000UL; // Sleep duration between measu
 unsigned int counter = 0U;
 
 CommandHandler commandHandler(Serial, commandBuffer, sizeof(commandBuffer), handleCommand);
-SdFat sd;
-RTC_DS3231 rtc;
 
-Sunrise sunrise(0x69);
+#ifdef SD_ENABLE
+SdFat sd;
+#endif
+
+RTC_DS3231 rtc;
+DateTime start;
+DateTime now;
+
+Sunrise sunrise(SUNRISE_ADDRESS);
 volatile uint8_t isReady = false;
 uint16_t hourCount = 0U;
 unsigned long int nextHour;
 unsigned long int nextMeasurement;
-void nrdyISR(void);
-bool awaitISR(unsigned long int timeout = 2000UL);
+unsigned long int estimatedMeasurementDuration;
 
 LightTracker lightTracker(5, 6, A0, A1, A2, A3, 0.25f * ANALOG_MAX, 0.05f * ANALOG_MAX);
+
+typedef enum
+{
+    LT_NONE,
+    LT_ERROR,
+    LT_WARNING
+} logtype_t;
 
 void setupSD(void);
 void setupRTC(void);
@@ -64,9 +107,15 @@ bool readCO2(void);
 bool writeTextFile(const char* filepath, const payload_t& content);
 bool writeBinaryFile(const char* filepath, const payload_t& content);
 bool readBinaryFile(const char* filepath, payload_t* result, size_t* resultCount, size_t count, size_t index = 0U);
+bool logError(logtype_t mode, const char* msg);
 
-void switchMode(measurementmode_t mode);
+void setState(bool status, bool halt = true);
 void delayUntil(unsigned long int time);
+void switchMode(measurementmode_t mode);
+
+void nrdyISR(void);
+bool awaitISR(unsigned long int timeout = 2000UL);
+void fileTimestamp(uint16_t* date, uint16_t* time);
 
 void setup(void)
 {
@@ -75,9 +124,14 @@ void setup(void)
     while(!Serial);
 
     DebugPrintLineF("Initializing...");
+    DebugFlush();
+
+    pinMode(PIN_ERRORLED, OUTPUT);
+    pinMode(PIN_OKLED, OUTPUT);
+    digitalWrite(PIN_ERRORLED, LOW);
+    digitalWrite(PIN_OKLED, LOW);
 
     #ifdef SD_ENABLE
-    DebugPrintLineF("SD card...");
     setupSD();
     #endif
 
@@ -94,6 +148,7 @@ void setup(void)
     lightTracker.Begin();
     #endif
 
+    #ifdef SETUP_ENABLE
     DebugPrintLineF("Waiting for setup command...");
     Serial.setTimeout(2500UL);
     Serial.println(CMD_INIT);
@@ -102,6 +157,7 @@ void setup(void)
         commandHandler.Flush();
     }
     Serial.setTimeout(1000UL); // Restore default timeout
+    #endif
 
     DebugPrintLineF("Done");
     DebugPrintLine();
@@ -110,26 +166,34 @@ void setup(void)
     //#define TEST_INPUT
     #ifdef TEST_INPUT
     testReadFromFile();
-    while(true);
+    while(true) { yield(); }
     #endif
 
-    nextHour = millis() + MS_PER_H;
     nextMeasurement = millis();
+    start = rtc.now();
+
+    #ifdef __DEBUG__
+    char formatBuffer[] = "YYYY-MM-DD hh:mm:ss";
+    DebugPrint(start.toString(formatBuffer));
+    DebugPrintF(" (");
+    DebugPrint(start.unixtime());
+    DebugPrintLineF(")");
+    #endif
 }
 
 void loop(void)
 {
+    setState(true);
     measurement = { 0xFFFFFFFF, 0xFFFF, 0U, 0U };
 
     #ifdef RTC_ENABLE
-    DateTime now = rtc.now();
+    now = rtc.now();
     measurement.timestamp = now.unixtime();
     #endif
 
     #ifdef SENSOR_ENABLE
     if(!readCO2())
     {
-        DebugPrintLineF("Error: Failed to retrieve sensor values");
         return;
     }
     #endif
@@ -138,7 +202,8 @@ void loop(void)
     #ifdef SD_ENABLE
     if(!writeBinaryFile(LOGFILE_BINARY, measurement))
     {
-        DebugPrintLineF("Error: Could not open \'" LOGFILE_BINARY "\' for writing");
+        DebugPrintLineF("ERROR: Could not write to file: \'" LOGFILE_BINARY "\'");
+        //logError("ERROR: Could not write to file: \'" LOGFILE_BINARY "\'");
     }
     #endif
     #endif
@@ -147,7 +212,8 @@ void loop(void)
     #ifdef SD_ENABLE
     if(!writeTextFile(LOGFILE_TEXT, measurement))
     {
-        DebugPrintLine("Error: Could not write to \'" LOGFILE_TEXT "\'");
+        DebugPrintLine("ERROR: Could not write to file: \'" LOGFILE_TEXT "\'");
+        //logError("ERROR: Could not write to file: \'" LOGFILE_TEXT "\'");
     }
     #endif
     #endif
@@ -163,6 +229,8 @@ void loop(void)
     }
     #endif
 
+    digitalWrite(PIN_ERRORLED, LOW);
+    digitalWrite(PIN_OKLED, LOW);
     #ifdef SLEEP_ENABLE
     sleep.pwrDownMode();
     sleep.sleepDelay(sleepDuration);
@@ -174,71 +242,63 @@ void loop(void)
 
 void setupSD(void)
 {
-    DebugPrintLineF("SD card...");
-
+    #ifdef SD_ENABLE
     if(!sd.begin(SS, SD_SCK_MHZ(50)))
     {
-        digitalWrite(9, HIGH);
-        DebugPrintLine("Error: Failed to set up the device");
-        sd.initErrorPrint();
-        while(true);
+        DebugPrintLine("ERROR: Failed to initialize SD device");
+        //sd.initErrorPrint();
+        setState(false);
     }
 
     if(!sd.chdir(LOGDIR))
     {
-        DebugPrintLine("Creating directory...");
         if(!sd.mkdir(LOGDIR))
         {
-            DebugPrintLine("Error: Failed to create directory");
-            while(true);
+            DebugPrintLine("ERROR: Failed to create directory");
+            setState(false);
         }
 
         if(!sd.chdir(LOGDIR))
         {
-            DebugPrintLine("Error: Failed to change directory");
-            while(true);
+            DebugPrintLine("ERROR: Failed to change directory");
+            setState(false);
         }
     }
+
+    SdFile::dateTimeCallback(fileTimestamp);
+    #endif
 }
 
 void setupRTC(void)
 {
-    DebugPrintLineF("RTC...");
     if(!rtc.begin())
     {
-        DebugPrintLineF("Failed");
-        while(true);
+        DebugPrintLineF(ERRMSG_RTC_INIT);
+        logError(logtype_t::LT_ERROR, ERRMSG_RTC_INIT);
+        setState(false);
     }
-
-    #ifdef __DEBUG__
-    DateTime tmpTime = rtc.now();
-    DebugPrintF("Current time: ");
-    char formatBuffer[] = "YYYY-MM-DD hh:mm:ss";
-    DebugPrint(tmpTime.toString(formatBuffer));
-    DebugPrintF(" (");
-    DebugPrint(tmpTime.unixtime());
-    DebugPrintLineF(")");
-    #endif
 
     if(rtc.lostPower())
     {
-        DebugPrintLineF("Warning: RTC may have lost track of time");
+        DebugPrintLineF(WRNMSG_RTC_LOST_TIME);
+        logError(logtype_t::LT_WARNING, WRNMSG_RTC_LOST_TIME);
+        #ifdef SETUP_ENABLE
         delay(2500UL);
+        #endif
     }
 }
 
 void setupSunrise(void)
 {
-    DebugPrintLineF("Sensor...");
-
     pinMode(PIN_NRDY, INPUT);
     attachInterrupt(digitalPinToInterrupt(PIN_NRDY), nrdyISR, FALLING);
 
     // Initial device setup. Also retrieves initial measurement state.
     if(!sunrise.Begin(PIN_EN, true))
     {
-        DebugPrintLineF("Error: Could not initialize the device");
-        while(true);
+        DebugPrintLineF(ERRMSG_SENSOR_INIT);
+        logError(logtype_t::LT_ERROR, ERRMSG_SENSOR_INIT);
+        setState(false);
     }
 
     sunrise.Awake();
@@ -247,15 +307,27 @@ void setupSunrise(void)
     metercontrol_t mc;
     if(!sunrise.GetMeterControlEE(mc))
     {
-        DebugPrintLineF("*** ERROR: Could not get meter control");
-        while(true);
+        DebugPrintLineF(ERRMSG_SENSOR_GET_METER_CONTROL);
+        logError(logtype_t::LT_ERROR, ERRMSG_SENSOR_GET_METER_CONTROL);
+        setState(false);
     }
 
     if(!mc.nrdy)
     {
-        DebugPrintLineF("*** ERROR: NRDY option should be enabled");
-        while(true);
+        DebugPrintLineF(ERRMSG_SENSOR_NRDY);
+        logError(logtype_t::LT_ERROR, ERRMSG_SENSOR_NRDY);
+        setState(false);
     }
+
+    uint16_t nos;
+    if(!sunrise.GetNumberOfSamplesEE(nos))
+    {
+        DebugPrintLineF(ERRMSG_SENSOR_NUMBER_OF_SAMPLES);
+        logError(logtype_t::LT_ERROR, ERRMSG_SENSOR_NUMBER_OF_SAMPLES);
+        setState(false);
+    }
+
+    estimatedMeasurementDuration = nos * SAMPLE_DURATION;
 
     sunrise.Sleep();
 }
@@ -266,44 +338,38 @@ bool readCO2(void)
     sunrise.Awake();
     DebugPrintLineF("Measuring...");
 
-    // Count hours (taking time rollover in consideration).
-    if((long)(millis() - nextHour) >= 0L)
-    {
-        hourCount++;
-        nextHour += MS_PER_H;
-    }
+    uint16_t hourCount = (uint16_t)((now.unixtime() - start.unixtime()) / (uint32_t)SECONDS_PER_HOUR);
 
-    // Single measurement mode requires host device to increment ABC time.
-    uint16_t tmpHourCount = sunrise.GetABCTime();
-    if(hourCount != tmpHourCount)
-    {
-        sunrise.SetABCTime(hourCount);
-        DebugPrintLineF("Setting ABC time:  "); Serial.println(hourCount);
-    }
+    // Single measurement mode requires host device to increment ABC time between sleeps.
+    sunrise.SetABCTime(hourCount);
+    DebugPrintF("Setting ABC time:  "); DebugPrintLine(hourCount);
 
     // Reset ISR variable and start new measurement.
     isReady = false;
     if(!sunrise.StartSingleMeasurement())
     {
-        DebugPrintLineF("*** ERROR: Could not start single measurement");
+        DebugPrintLineF(ERRMSG_SENSOR_START_MEASRUEENT);
+        logError(logtype_t::LT_ERROR, ERRMSG_SENSOR_START_MEASRUEENT);
         return false;
     }
 
     // Wait for the sensor to complate the measurement and signal the ISR (or timeout).
     unsigned long int measurementStartTime = millis();
-    if(!awaitISR())
+    if(!awaitISR(estimatedMeasurementDuration))
     {
-        DebugPrintLineF("*** ERROR: ISR timeout");
+        DebugPrintLineF(ERRMSG_SENSOR_ISR_TIMEOUT);
+        logError(logtype_t::LT_ERROR, ERRMSG_SENSOR_ISR_TIMEOUT);
         return false;
     }
 
     unsigned long int measurementDuration = millis() - measurementStartTime;
-    Serial.print("Duration:          "); Serial.println(measurementDuration);
+    DebugPrintF("Duration:          "); DebugPrintLine(measurementDuration);
 
     // Read and print measurement values.
     if(!sunrise.ReadMeasurement())
     {
-        DebugPrintLineF("*** ERROR: Could not read measurement");
+        DebugPrintLineF(ERRMSG_SENSOR_READ_MEASUREMENT);
+        logError(logtype_t::LT_ERROR, ERRMSG_SENSOR_READ_MEASUREMENT);
         return false;
     }
 
@@ -321,6 +387,7 @@ bool readCO2(void)
 
 bool writeTextFile(const char* filepath, const payload_t& content)
 {
+    #ifdef SD_ENABLE
     File file = sd.open(filepath, FILE_WRITE);
     if(!file)
     {
@@ -334,11 +401,13 @@ bool writeTextFile(const char* filepath, const payload_t& content)
     file.flush();
 
     file.close();
+    #endif
     return true;
 }
 
 bool writeBinaryFile(const char* filepath, const payload_t& content)
 {
+    #ifdef SD_ENABLE
     File file = sd.open(filepath, FILE_WRITE);
     if(!file)
     {
@@ -348,11 +417,13 @@ bool writeBinaryFile(const char* filepath, const payload_t& content)
     file.write(&content, sizeof(content));
     file.flush();
     file.close();
+    #endif
     return true;
 }
 
 bool readBinaryFile(const char* filepath, payload_t* result, size_t* resultCount, size_t count, size_t index)
 {
+    #ifdef SD_ENABLE
     if(resultCount != nullptr)
     {
         *resultCount = 0U;
@@ -396,19 +467,57 @@ bool readBinaryFile(const char* filepath, payload_t* result, size_t* resultCount
     }
 
     file.close();
+    #endif
     return true;
 }
 
-void nrdyISR(void)
+bool logError(logtype_t type, const char* msg)
 {
-    isReady = true;
+    #ifdef SD_ENABLE
+    File file = sd.open(ERRORFILE, FILE_WRITE);
+    if(!file)
+    {
+        return false;
+    }
+
+    switch(type)
+    {
+        case LT_ERROR:
+            DebugPrintF("ERROR: ");
+            break;
+        case LT_WARNING:
+            DebugPrintF("WARNING: ");
+            break;
+        default:
+            break;
+    }
+
+    file.print(msg);
+    file.println();
+    file.flush();
+
+    file.close();
+    #endif
+    return true;
 }
 
-bool awaitISR(unsigned long int timeout)
+void setState(bool status, bool halt)
 {
-    timeout += millis();
-    while(!isReady && (long)(millis() - timeout) < 0L);
-    return isReady;
+    if(status)
+    {
+        digitalWrite(PIN_ERRORLED, LOW);
+        digitalWrite(PIN_OKLED, HIGH);
+    }
+    else
+    {
+        digitalWrite(PIN_ERRORLED, HIGH);
+        digitalWrite(PIN_OKLED, LOW);
+
+        while(halt)
+        {
+            yield();
+        }
+    }
 }
 
 void delayUntil(unsigned long int time)
@@ -423,8 +532,9 @@ void switchMode(measurementmode_t mode)
         measurementmode_t measurementMode;
         if(!sunrise.GetMeasurementModeEE(measurementMode))
         {
-            Serial.println("*** ERROR: Could not get measurement mode");
-            while(true);
+            DebugPrintLine(ERRMSG_SENSOR_GET_MEASUREMENT_MODE);
+            logError(logtype_t::LT_ERROR, ERRMSG_SENSOR_GET_MEASUREMENT_MODE);
+            setState(false);
         }
 
         if(measurementMode == mode)
@@ -432,17 +542,40 @@ void switchMode(measurementmode_t mode)
             break;
         }
 
-        Serial.println("Attempting to switch measurement mode...");
+        DebugPrintLineF("Attempting to switch measurement mode...");
         if(!sunrise.SetMeasurementModeEE(mode))
         {
-            Serial.println("*** ERROR: Could not set measurement mode");
-            while(true);
+            DebugPrintLine(ERRMSG_SENSOR_SET_MEASUREMENT_MODE);
+            logError(logtype_t::LT_ERROR, ERRMSG_SENSOR_SET_MEASUREMENT_MODE);
+            setState(false);
         }
 
         if(!sunrise.HardRestart())
         {
-            Serial.println("*** ERROR: Failed to restart the device");
-            while(true);
+            DebugPrintLine(ERRMSG_SENSOR_RESTART);
+            logError(logtype_t::LT_ERROR, ERRMSG_SENSOR_RESTART);
+            setState(false);
         }
     }
+}
+
+void nrdyISR(void)
+{
+    isReady = true;
+}
+
+bool awaitISR(unsigned long int timeout)
+{
+    timeout += millis();
+    while(!isReady && (long)(millis() - timeout) < 0L);
+    return isReady;
+}
+
+void fileTimestamp(uint16_t* date, uint16_t* time)
+{
+    #ifdef SD_ENABLE
+    now = rtc.now();
+    *date = FAT_DATE(now.year(), now.month(), now.day());
+    *time = FAT_TIME(now.hour(), now.minute(), now.second());
+    #endif
 }
