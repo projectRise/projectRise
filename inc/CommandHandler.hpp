@@ -11,6 +11,7 @@
 #include <string.h>
 #include <stddef.h>
 #include <Stream.h>
+#include <Arduino.h>
 
 class CommandHandler;
 typedef bool(*cmdhndlr_t)(CommandHandler*, const char*, const char*);
