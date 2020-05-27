@@ -7,31 +7,41 @@
 
 #include <stdint.h>
 #include <SPI.h>
+#include "types.h"
+#include "misc.hpp"
+#include "debug.hpp"
+
 #ifdef SD_ENABLE
+#define USE_SDIO    0
 #include <SdFat.h>
+#include "sdios.h"
 #endif
 
+#ifdef RTC_ENABLE
 #include <RTClib.h>
+#endif
+
+#ifdef SENSOR_ENABLE
+#include "Sunrise.h"
+#endif
+
+#ifdef LIGHT_TRACKER_ENABLE
+#include "LightTracker.hpp"
+#endif
 
 #if SLEEP_ENABLE
 #include <Sleep_n0m1.h>
 #endif
 
-#include "types.h"
+#ifdef SETUP_ENABLE
 #include "CommandHandler.hpp"
-#include "Sunrise.h"
-#include "LightTracker.hpp"
-#include "misc.hpp"
-#include "debug.hpp"
-#ifdef SD_ENABLE
-#include "sdios.h"
 #endif
 
 const char* ERRMSG_RTC_INIT = "Could not initialize RTC device";
 const char* ERRMSG_SENSOR_INIT = "Could not initialize sensor device";
 const char* ERRMSG_SENSOR_GET_METER_CONTROL = "Could not get meter control";
-const char* ERRMSG_SENSOR_NRDY = "ERROR : NRDY option should be enabled";
-const char* ERRMSG_SENSOR_NUMBER_OF_SAMPLES = "ERROR : Could not get number of samples";
+const char* ERRMSG_SENSOR_NRDY = "NRDY option should be enabled";
+const char* ERRMSG_SENSOR_NUMBER_OF_SAMPLES = "Could not get number of samples";
 const char* ERRMSG_SENSOR_START_MEASRUEENT = "Could not start measurement";
 const char* ERRMSG_SENSOR_ISR_TIMEOUT = "ISR timeout";
 const char* ERRMSG_SENSOR_READ_MEASUREMENT = "Could not read measurement";
@@ -39,10 +49,6 @@ const char* ERRMSG_SENSOR_GET_MEASUREMENT_MODE = "Could not get measurement mode
 const char* ERRMSG_SENSOR_SET_MEASUREMENT_MODE = "Could not set measurement mode";
 const char* ERRMSG_SENSOR_RESTART = "Failed to restart sensor device";
 const char* WRNMSG_RTC_LOST_TIME = "RTC may have lost track of time";
-
-#ifdef SD_ENABLE
-#define USE_SDIO                0
-#endif
 
 #define ANALOG_MAX              ((1 << 10) - 1)
 
@@ -53,7 +59,7 @@ const char* WRNMSG_RTC_LOST_TIME = "RTC may have lost track of time";
 #define PIN_EN                  2
 #define PIN_NRDY                3
 #define MEASUREMENT_INTERVAL    (5UL * 1000UL)
-#define SECONDS_PER_HOUR        ((60U * 60U) * 1000U)
+#define SECONDS_PER_HOUR        (60U * 60U)
 
 #define SAMPLE_DURATION         200UL
 #define CALIBRATION_DURATION    50UL
@@ -73,7 +79,9 @@ payload_t measurement;
 unsigned long int sleepDuration = 60UL * 1000UL; // Sleep duration between measurements
 unsigned int counter = 0U;
 
+#ifdef SETUP_ENABLE
 CommandHandler commandHandler(Serial, commandBuffer, sizeof(commandBuffer), handleCommand);
+#endif
 
 #ifdef SD_ENABLE
 SdFat sd;
@@ -83,14 +91,18 @@ RTC_DS3231 rtc;
 DateTime start;
 DateTime now;
 
+#ifdef SENSOR_ENABLE
 Sunrise sunrise(SUNRISE_ADDRESS);
+#endif
 volatile uint8_t isReady = false;
 uint16_t hourCount = 0U;
 unsigned long int nextHour;
 unsigned long int nextMeasurement;
 unsigned long int estimatedMeasurementDuration;
 
+#ifdef LIGHT_TRACKER_ENABLE
 LightTracker lightTracker(5, 6, A0, A1, A2, A3, 0.25f * ANALOG_MAX, 0.05f * ANALOG_MAX);
+#endif
 
 typedef enum
 {
