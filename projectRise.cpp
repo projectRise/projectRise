@@ -12,9 +12,9 @@
 #include "debug.hpp"
 
 #ifdef SD_ENABLE
-#define USE_SDIO    0
 #include <SdFat.h>
 #include "sdios.h"
+#define USE_SDIO    0
 #endif
 
 #ifdef RTC_ENABLE
